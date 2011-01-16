@@ -1,5 +1,8 @@
-import Matrix
+import matrix
 import math
+
+from matrix import *
+from math import *
 
 class Node:
     def __init__(self, x, y):
@@ -12,14 +15,14 @@ class Node:
         self.leftChild = None
         self.rightChild = None
         for i in range(0, len(self.x.cols)):
-            self.featureSet.add(cols[i])
+            self.featureSet.add(self.x.cols[i])
 
-    def Learn():
+    def Learn(self):
         #check is split enough(all cate in current node is same)
         tmp = self.y[0]
         isSame = True
         for i in range(1, len(self.y)):
-            if tmp != y[i]:
+            if tmp != self.y[i]:
                 isSame = False
                 break
 
@@ -31,9 +34,10 @@ class Node:
 
         #find max-cate num
         maxCate = -1
-        for i in range(0, len(y)):
-            if (y[i] > maxCate):
-                maxCate = y[i]
+        for i in range(0, len(self.y)):
+            if (self.y[i] > maxCate):
+                maxCate = self.y[i]
+        print maxCate
         
         #else, calculate information-gain(IG(Y|X))
         bestGain = -1000000000
@@ -44,7 +48,7 @@ class Node:
             yOnes = []  #when x = 1, counts of y's value
             xZero = 0   #number of sample[feat] == 0
             xOne = 0    #number of sample[feat] == 1
-            for i in range(0, maxCate + 1):
+            for j in range(0, maxCate + 1):
                 yZeros.append(0)
                 yOnes.append(0)
 
@@ -53,21 +57,22 @@ class Node:
             #          j
             #H(X) = H(Y|x = 0)P(x = 0) + H(Y|x = 1)P(x = 1)
             curGain = 0
-            for sample in range(0, len(x.rows) -1):
-                value = x.find(sample, feat)
+            print self.x.rows
+            for sample in range(0, len(self.x.rows) - 1):
+                value = self.x.Get(sample, feat)
                 if (value == 0):
-                   yZeros[y[sample]] += 1
+                   yZeros[self.y[sample]] += 1
                    xZero += 1
                 else:
-                   yOnes[y[sample]] += 1
+                   yOnes[self.y[sample]] += 1
                    xOne += 1
 
             #using yZeros and yOnes Get IG(Y|X)
             #calculate H(Y|x = 0)
             zeroGain = 0
-            for i in range(0, maxCate + 1):
-                if (yZeros[i] > 0):
-                    p = yZero[i] * 1.00 / xZero
+            for j in range(0, maxCate + 1):
+                if (yZeros[j] > 0):
+                    p = yZero[j] * 1.00 / xZero
                     zeroGain += -1 * p * log(p, 2)
             #calculate H(Y|x = 0) * p(x = 0)
             zeroGain *= xZero * 1.00 / (xZero + xOne)
@@ -97,7 +102,7 @@ class Node:
         rightVals = []
         leftY = []
         rightY = []
-        for sample in range(0, x.nRow)
+        for sample in range(0, x.nRow):
             if x.Get(sample, bestSplit):
                 rightRows.append(rightRows[len(rightRows) - 1] + \
                 x.rows[sample + 1] - x.rows[sample])
@@ -108,10 +113,10 @@ class Node:
             else:
                 leftRows.append(leftRows[len(leftRows) - 1] + \
                 x.rows[sample + 1] - x.rows[sample])
-                for i in range(x.rows[sample, x.rows[sample + 1]):
+                for i in range(x.rows[sample, x.rows[sample + 1]]):
                     leftCols.append(x.cols[i])
                     leftVals.append(x.vals[i])
-                leftY.append(y[sample])
+                    leftY.append(y[sample])
         leftMat = Matrix(leftRows, leftCols, leftVals)
         rightMat = Matrix(rightRows, rightCols, rightVals)
         self.leftChild = Node(leftMat, leftY)

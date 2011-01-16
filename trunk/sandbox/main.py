@@ -1,12 +1,15 @@
 #coding=utf8=
 #mmseg
 import matrix
+import random_forest
+from matrix import *
+from random_forest import *
 def Segment(line, dicts):
     index = 0
     wordList = []
     while index < len(line):
         finded = False
-		#for i = 4 -> 2
+        #for i = 4 -> 2
         for i in range(2, 4, 1) [::-1]:
             if (i + index <= len(line)):
                 if (dicts.has_key(line[index : i + index])):
@@ -38,29 +41,29 @@ def CreateMatrixFromData(dataPath, srcDict):
     rows = [0]
     cols = []
     vals = []
-	#define target num of each sample
-	tars = []
-
-	
-	#2. open data file, create tarDict from samples
+    #define target num of each sample
+    tars = []
+    
+    #2. open data file, create tarDict from samples
     tarDict = {}
     f = open(dataPath, "r")
     uid = 0
     for line in f:
-		#line format as: content \t class
-		line = line.decode("utf-8")
-		vec = line.split("\t")
-		tars.append(vec[1])
-		
-        words = Segment(line.decode("utf-8"), srcDict)
+        #line format as: content \t class
+        line = line.decode("utf-8")
+        vec = line.split("\t")
+        tars.append(int(vec[1]))
+        
+        words = Segment(line, srcDict)
         for word in words:
             if (not tarDict.has_key(word)):
                 tarDict[word] = uid
                 uid += 1
-				
-	#3. re-open data file, using tarDict, and create csr
+    print tars
+                
+    #3. re-open data file, using tarDict, and create csr
     f.close()
-    f = open("e:\src-code\python_platform\data\\tuangou_titles.txt", "r")
+    f = open(dataPath, "r")
     for line in f:
         words = Segment(line.decode("utf-8"), srcDict)
         partCols = []
@@ -73,14 +76,15 @@ def CreateMatrixFromData(dataPath, srcDict):
             cols.append(col)
             vals.append(1)
         rows.append(len(partCols))
-	return [rows, cols, vals, tars, tarDict]
-	
+    return [rows, cols, vals, tars, tarDict]
+    
 def Train(dataPath, nTree, ratio, srcDict):
     #using training data get mat-x and mat-y
     #[rows, cols, vals, y, tarDict] = CreateMatrixFromData("e:\src-code\python_platform\data\\tuangou_titles.txt")
-    [rows, cols, vals, y, tarDict] = CreateMatrixFromData(path, srcDict)
-	x = Matrix(rows, cols, vals)
+    [rows, cols, vals, y, tarDict] = CreateMatrixFromData(dataPath, srcDict)
+    x = Matrix(rows, cols, vals)
     model = RandomForest(x, y, nTree, ratio)
+    model.Learn()
     return [model, tarDict]
 
 def Predict(line, model, srcDict, tarDict):
@@ -102,8 +106,8 @@ def Predict(line, model, srcDict, tarDict):
     return model.Predict(Matrix(rows, cols, vals))
 
 if __name__ == "__main__":
-	srcDict = LoadDict("E:\src-code\python_platform\dict\\baidu_dict.txt")
-    [model, tarDict] = Train("e:\src-code\python_platform\data\\tuangou_titles.txt", \
-    10, 0.1, srcDict)
+    srcDict = LoadDict("dict/baidu_dict.txt")
+    [model, tarDict] = Train("data/10.tuangou", 10, 0.1, srcDict)
+    line = u"仅售99元！原价163.2元的统一番茄汁大罐装一箱（335ML*24罐）！统一企业新年超给力巨献，买统一番茄汁更有机会获得ipod nano4"
     result = Predict(line, model, srcDict, tarDict)
     print line[0:50], " ", result

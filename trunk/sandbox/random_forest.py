@@ -1,8 +1,12 @@
-import Matrix
-import Node
+import matrix
+import node
 import math
 
-class RandomForest
+from math import *
+from matrix import *
+from node import *
+
+class RandomForest:
     #build a forest consist of nTree trees
     #and each tree have (int)(ratio * nFeatures) variables
     def __init__(self, x, y, nTree, ratio):
@@ -10,22 +14,24 @@ class RandomForest
         self.nFeature = int(x.nCol * ratio)
         self.x = x
         self.y = y
+        self.trees = []
 
     def Learn(self):
         #get transpose of x
         tX = self.x.Transpose()
 
         #spawn forest
-        self.trees = []
         for i in range(0, self.nTree):
             subX = Matrix.BaggingFromMatrix(tX, self.nFeature)
             node = Node(subX, self.y)
             node.Learn()
             self.trees.append(node)
 
+        print "ntree in train:", len(self.trees)
+
     def Predict(self, sample):
         results = {}
-        for i in range(0, self, nTree):
+        for i in range(0, self.nTree):
             result = self.trees[i].Predict(sample)
             if not results.has_key(result):
                 results[result] = 0

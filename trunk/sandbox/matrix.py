@@ -1,4 +1,5 @@
 import random
+import bisect
 
 class Tripple:
     def __init__(self, row, col, val):
@@ -53,12 +54,12 @@ class Matrix:
                 triList.append(t)
         
         #sort tripple
-        for t in triList:
-            print t.row, " ", t.col, " ", t.val
-        print "====="
+        #for t in triList:
+        #    print t.row, " ", t.col, " ", t.val
+        #print "====="
         sorted(triList, cmp = TrippleCmp)
-        for t in triList:
-            print t.row, " ", t.col, " ", t.val
+        #for t in triList:
+        #    print t.row, " ", t.col, " ", t.val
         
         #make tripple back to csr
         newRows = []
@@ -85,32 +86,32 @@ class Matrix:
         for i in range(0, m):
             ratio = random.random()
             index = int(ratio * mat.nRow)
-            print "index:", index
             rows.append(rows[len(rows) - 1] + (mat.rows[index + 1] - mat.rows[index]))
             for j in range(mat.rows[index], mat.rows[index + 1]):
                 cols.append(mat.cols[j])
                 if (j > maxCol):
                     maxCol = j
                 vals.append(mat.vals[j])
-        newMat = Matrix(rows, cols, vals, m, maxCol + 1)
-        return newMat.Transpose
+        newMat = Matrix(rows, cols, vals)
+        return newMat.Transpose()
 
-if __name__ == "__main__":
-    rows = [0, 3, 4, 5, 6]
-    cols = [0, 1, 2, 3, 4, 4]
-    vals = [1, 1, 1, 1, 1, 1]
-    mat = Matrix(rows, cols, vals, 4, 5)
-    tMat = mat.Transpose()
+#if __name__ == "__main__":
+
+    #rows = [0, 3, 4, 5, 6]
+    #cols = [0, 1, 2, 3, 4, 4]
+    #vals = [1, 1, 1, 1, 1, 1]
+    #mat = Matrix(rows, cols, vals, 4, 5)
+    #tMat = mat.Transpose()
     #print tMat.rows
     #print tMat.cols
     #print tMat.vals
 
-    sample = Matrix.BaggingFromMatrix(mat, 2)
-    print sample.rows
-    print sample.cols
-    print sample.vals
+    #sample = Matrix.BaggingFromMatrix(mat, 2)
+    #print sample.rows
+    #print sample.cols
+    #print sample.vals
 
-    sample = Matrix.BaggingFromMatrix(mat, 2)
-    print sample.rows
-    print sample.cols
-    print sample.vals
+    #sample = Matrix.BaggingFromMatrix(mat, 2)
+    #print sample.rows
+    #print sample.cols
+    #print sample.vals
