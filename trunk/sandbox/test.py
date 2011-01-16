@@ -79,5 +79,8 @@ def CreateMatrixFromData(dataPath):
 	
     
 if __name__ == "__main__":
-    [rows, cols, vals, tars, tarDict] = CreateMatrixFromData("e:\src-code\python_platform\data\\tuangou_titles.txt")
+    #using training data get mat-x and mat-y
+    [rows, cols, vals, y, tarDict] = CreateMatrixFromData("e:\src-code\python_platform\data\\tuangou_titles.txt")
 	x = Matrix(rows, cols, vals, len(rows) - 1, len(tarDict))
+
+
