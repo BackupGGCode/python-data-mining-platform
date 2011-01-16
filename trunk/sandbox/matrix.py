@@ -36,8 +36,8 @@ class Matrix:
 
     #get element @(x,y), if no element, return 0, if range error, return -1
     def Get(self, x, y):
-        if (x <= 0) or (x >= self.nRow):
-            return -1
+        if (x < 0) or (x >= self.nRow):
+            return 0
         index = bisect.bisect_left(self.cols, y, self.rows[x], self.rows[x + 1])
         if index < len(self.cols) and index >= 0 and self.cols[index] == y:
             return 1
@@ -90,9 +90,11 @@ class Matrix:
         cols = []
         vals = []
         maxCol = -1
+        baggingDict = {}
         for i in range(0, m):
             ratio = random.random()
             index = int(ratio * mat.nRow)
+            baggingDict[i] = index
             #print "add elements to new mat:", mat.rows[index + 1] - mat.rows[index]
             rows.append(rows[len(rows) - 1] + (mat.rows[index + 1] - mat.rows[index]))
             for j in range(mat.rows[index], mat.rows[index + 1]):
@@ -104,7 +106,7 @@ class Matrix:
         #print "after bagging:"
         #print rows
         #print cols
-        return newMat.Transpose(mat.nCol)
+        return [newMat.Transpose(mat.nCol), baggingDict]
 
 #if __name__ == "__main__":
 

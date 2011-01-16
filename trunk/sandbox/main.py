@@ -46,6 +46,7 @@ def CreateMatrixFromData(dataPath, srcDict):
     
     #2. open data file, create tarDict from samples
     tarDict = {}
+    tarDictNum = {}
     f = open(dataPath, "r")
     uid = 0
     for line in f:
@@ -58,7 +59,14 @@ def CreateMatrixFromData(dataPath, srcDict):
         for word in words:
             if (not tarDict.has_key(word)):
                 tarDict[word] = uid
+                tarDictNum[word] = 0
                 uid += 1
+            else:
+                tarDictNum[word] += 1
+
+    for word in tarDictNum:
+        if (tarDictNum[word] >= 20):
+            del tarDict[word]
                 
     #3. re-open data file, using tarDict, and create csr
     f.close()
@@ -95,6 +103,7 @@ def Predict(line, model, srcDict, tarDict):
             partCols.append(tarDict[word])
     partCols = set(partCols)
     partCols = list(partCols)
+    partCols.sort()
 
     rows = [0]
     cols = []
@@ -103,14 +112,32 @@ def Predict(line, model, srcDict, tarDict):
         cols.append(col)
         vals.append(1)
     rows.append(len(partCols))
+
+    print rows
+    print cols
     return model.Predict(Matrix(rows, cols, vals))
 
 if __name__ == "__main__":
     srcDict = LoadDict("dict/baidu_dict.txt")
-    [model, tarDict] = Train("data/10.tuangou", 1, 0.1, srcDict)
+    [model, tarDict] = Train("data/tuangou_titles_with_tag.txt", 100, 0.05, srcDict)
    
     print "after train"
 
-    line = u"仅售99元！原价163.2元的统一番茄汁大罐装一箱（335ML*24罐）！统一企业新年超给力巨献，买统一番茄汁更有机会获得ipod nano4"
-    result = Predict(line, model, srcDict, tarDict)
-    print line[0:50], " ", result
+    #using test data one by one
+    correct = 0
+    incorrect = 0
+    f = open("data/tuangou_titles_with_tag.txt", "r")
+    for line in f:
+        line = line.decode("utf-8")
+        vec = line.split("\t")
+        predictResult = Predict(vec[0], model, srcDict, tarDict)
+        tag = int(vec[1])
+        if (tag == predictResult):
+            correct += 1
+        else:
+            incorrect += 1
+        print "source:", tag, " predicted:", predictResult
+
+    print "precision:", correct * 1.00 / (correct + incorrect)
+
+

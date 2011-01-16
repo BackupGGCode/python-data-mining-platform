@@ -5,7 +5,7 @@ from matrix import *
 from math import *
 
 class Node:
-    def __init__(self, x, y):
+    def __init__(self, x, y, baggingDict):
         self.x = x
         self.y = y
         self.featureSet = set()
@@ -14,12 +14,11 @@ class Node:
         self.variable = -1
         self.leftChild = None
         self.rightChild = None
+        self.baggingDict = baggingDict
         for i in range(0, len(self.x.cols)):
             self.featureSet.add(self.x.cols[i])
 
     def Learn(self):
-        print "enter learn"
-
         #check is split enough(all cate in current node is same)
         if (len(self.y) == 0):
             self.isLeaf = True
@@ -38,6 +37,7 @@ class Node:
             self.target = tmp
             return
 
+
         #find max-cate num
         maxCate = -1
         for i in range(0, len(self.y)):
@@ -45,8 +45,9 @@ class Node:
                 maxCate = self.y[i]
         
         #else, calculate information-gain(IG(Y|X))
-        bestGain = -1000000000
+        bestGain = 11000000000
         bestSplit = -1
+        majorTarget = -1
         for feat in self.featureSet:  
             #get how much cate in current y
             yZeros = [] #when x = 0, counts of y's value
@@ -78,7 +79,7 @@ class Node:
                 if (yZeros[j] > 0):
                     p = yZeros[j] * 1.00 / xZero
                     zeroGain += -1 * p * log(p, 2)
-            print "zero gain:", zeroGain
+            #print "zero gain:", zeroGain
             #calculate H(Y|x = 0) * p(x = 0)
             zeroGain *= xZero * 1.00 / (xZero + xOne)
             #calculate H(Y|x = 1)
@@ -87,17 +88,25 @@ class Node:
                 if (yOnes[i] > 0):
                     p = yOnes[i] * 1.00 / xOne
                     oneGain += -1 * p * log(p, 2)
+
+            #calculate major target
+            maxTar = -1
+            for j in range(0, maxCate + 1):
+                if (yZeros[j] + yOnes[j] > 0):
+                    maxTar = j
+
             #calculate H(Y|x = 1) * p(x = 1)
             oneGain *= xOne * 1.00 / (xZero + xOne)
-            print "one gain:", zeroGain
-            
-            if (zeroGain + oneGain > bestGain):
+            #print "one gain:", oneGain
+            if (zeroGain + oneGain < bestGain):
                 bestGain = zeroGain + oneGain
                 bestSplit = feat
-
-        if (bestSplit < 0):
-            print "best split < 0"
-            return
+                majorTarget = maxTar
+            #debug
+            #print "yOnes:", yOnes
+            #print "yZeros:", yZeros
+            #print "xOnes:", xOne
+            #print "xZeros:", xZero
 
         #using bestSplit split x,y to left, right child
         leftRows = [0]
@@ -108,6 +117,9 @@ class Node:
         rightVals = []
         leftY = []
         rightY = []
+        self.variable = bestSplit
+
+        #split training set to left and right child 
         for sample in range(0, self.x.nRow):
             if self.x.Get(sample, bestSplit):
                 rightRows.append(rightRows[len(rightRows) - 1] + \
@@ -125,10 +137,18 @@ class Node:
                 leftY.append(self.y[sample])
         leftMat = Matrix(leftRows, leftCols, leftVals)
         rightMat = Matrix(rightRows, rightCols, rightVals)
-        print "leftChild.mat:",len(leftMat.rows), " ", len(leftY)
-        print "rightChild.mat:",len(rightMat.rows), " ", len(rightY)
-        self.leftChild = Node(leftMat, leftY)
-        self.rightChild = Node(rightMat, rightY)
+        #print "leftChild.mat:",len(leftMat.rows), " ", len(leftY)
+        #print "rightChild.mat:",len(rightMat.rows), " ", len(rightY)
+        if (len(leftY) == 0) or (len(rightY) == 0):
+            #print "all input is same"
+            self.isLeaf = True
+            self.target = majorTarget
+            self.x = None
+            self.y = []
+            return
+
+        self.leftChild = Node(leftMat, leftY, self.baggingDict)
+        self.rightChild = Node(rightMat, rightY, self.baggingDict)
         self.leftChild.Learn()
         self.rightChild.Learn()
 
@@ -137,18 +157,18 @@ class Node:
         self.y = []
 
     def Predict(self, sample):
-        print "enter predict"
         if (self.isLeaf):
             return self.target
         else:
-            if (sample.Get(0, self.variable)):
+            #print "self.variable",self.variable
+            if (sample.Get(0, self.baggingDict[self.variable])):
                 if (self.leftChild != None):
                     return self.leftChild.Predict(sample)
                 else:
-                    print "error!"
+                    return -1
             else:
                 if (self.rightChild != None):
                     return self.rightChild.Predict(sample)
                 else:
-                    print "error!"
+                    return -1
 

@@ -29,7 +29,7 @@ class RandomForest:
 
         #spawn forest
         for i in range(0, self.nTree):
-            subX = Matrix.BaggingFromMatrix(tX, self.nFeature)
+            [subX, baggingDict] = Matrix.BaggingFromMatrix(tX, self.nFeature)
 
             #print "after bagging:"
             #print self.nFeature
@@ -37,26 +37,29 @@ class RandomForest:
             #print subX.cols
             #print subX.vals
 
-            node = Node(subX, self.y)
+            node = Node(subX, self.y, baggingDict)
             node.Learn()
             self.trees.append(node)
 
         print "ntree in train:", len(self.trees)
 
     def Predict(self, sample):
+        print "enter predict:"
         results = {}
         for i in range(0, self.nTree):
             result = self.trees[i].Predict(sample)
             if not results.has_key(result):
                 results[result] = 0
             else:
-                result[self.trees[i].Predict(sample)] += 1
+                results[result] += 1
 
         bestResult = -1
         maxNum = -1
         for result in results:
-            if results[result] > maxNum:
+            if (results[result] > maxNum) and (result != -1):
                 maxNum = results[result]
                 bestResult = result
+
+        print results
 
         return bestResult
