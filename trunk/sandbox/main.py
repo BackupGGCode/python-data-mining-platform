@@ -33,7 +33,7 @@ def LoadDict(dictPath):
     return dicts
 
 #process data file
-def CreateMatrixFromData(dataPath):
+def CreateMatrixFromData(dataPath, srcDict):
     #define csr row, col, val
     rows = [0]
     cols = []
@@ -41,8 +41,6 @@ def CreateMatrixFromData(dataPath):
 	#define target num of each sample
 	tars = []
 
-	#1. load dict
-	srcDict = LoadDict("E:\src-code\python_platform\dict\\baidu_dict.txt")
 	
 	#2. open data file, create tarDict from samples
     tarDict = {}
@@ -77,10 +75,35 @@ def CreateMatrixFromData(dataPath):
         rows.append(len(partCols))
 	return [rows, cols, vals, tars, tarDict]
 	
-    
-if __name__ == "__main__":
+def Train(dataPath, nTree, ratio, srcDict):
     #using training data get mat-x and mat-y
-    [rows, cols, vals, y, tarDict] = CreateMatrixFromData("e:\src-code\python_platform\data\\tuangou_titles.txt")
-	x = Matrix(rows, cols, vals, len(rows) - 1, len(tarDict))
+    #[rows, cols, vals, y, tarDict] = CreateMatrixFromData("e:\src-code\python_platform\data\\tuangou_titles.txt")
+    [rows, cols, vals, y, tarDict] = CreateMatrixFromData(path, srcDict)
+	x = Matrix(rows, cols, vals)
+    model = RandomForest(x, y, nTree, ratio)
+    return [model, tarDict]
 
+def Predict(line, model, srcDict, tarDict):
+    words = Segment(line, srcDict)
+    partCols = []
+    for word in words:
+        if (tarDict.has_key(word)):
+            partCols.append(tarDict[word])
+    partCols = set(partCols)
+    partCols = list(partCols)
 
+    rows = [0]
+    cols = []
+    vals = []
+    for col in partCols:
+        cols.append(col)
+        vals.append(1)
+    rows.append(len(partCols))
+    return model.Predict(Matrix(rows, cols, vals))
+
+if __name__ == "__main__":
+	srcDict = LoadDict("E:\src-code\python_platform\dict\\baidu_dict.txt")
+    [model, tarDict] = Train("e:\src-code\python_platform\data\\tuangou_titles.txt", \
+    10, 0.1, srcDict)
+    result = Predict(line, model, srcDict, tarDict)
+    print line[0:50], " ", result

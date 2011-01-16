@@ -22,12 +22,26 @@ def TrippleCmp(t1, t2):
 
 class Matrix:
     #init a matrix, using csr, and dimensions
-    def __init__(self, rows, cols, vals, nRow, nCol):
+    def __init__(self, rows, cols, vals):
         self.rows = rows
         self.cols = cols
         self.vals = vals
-        self.nRow = nRow
-        self.nCol = nCol
+        self.nRow = len(rows) - 1
+        maxCol = -1
+        for col in cols:
+            if (col > maxCol):
+                maxCol = col
+        self.nCol = maxCol + 1
+
+    #get element @(x,y), if no element, return 0, if range error, return -1
+    def Get(self, x, y):
+        if (x <= 0) or (x >= self.nRow):
+            return -1
+        index = bisect.bisect_left(self.cols, y, self.rows[x], self.rows[x + 1])
+        if (self.cols[index] == y):
+            return 1
+        else:
+            return 0
     
     def Transpose(self):
         #make transposed-tripple from csr
@@ -60,7 +74,7 @@ class Matrix:
             newCols.append(triList[i].col)
             newVals.append(triList[i].val)
         newRows.append(len(triList))
-        return Matrix(newRows, newCols, newVals, self.nCol, self.nRow)
+        return Matrix(newRows, newCols, newVals)
 
     @staticmethod
     def BaggingFromMatrix(mat, m):
