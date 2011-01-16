@@ -18,11 +18,25 @@ class RandomForest:
 
     def Learn(self):
         #get transpose of x
-        tX = self.x.Transpose()
+        tX = self.x.Transpose(self.x.nCol)
+        #print self.x.rows
+        #print self.x.cols
+
+        print "after transpose"
+
+        #print tX.rows
+        #print tX.cols
 
         #spawn forest
         for i in range(0, self.nTree):
             subX = Matrix.BaggingFromMatrix(tX, self.nFeature)
+
+            #print "after bagging:"
+            #print self.nFeature
+            #print subX.rows
+            #print subX.cols
+            #print subX.vals
+
             node = Node(subX, self.y)
             node.Learn()
             self.trees.append(node)

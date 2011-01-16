@@ -15,9 +15,9 @@ class Tripple:
         
 def TrippleCmp(t1, t2):
     if (t1.row < t2.row):
-        return True
+        return -1
     elif (t1.row > t2.row):
-        return False
+        return 1
     else:
         return t1.col < t2.col
 
@@ -39,12 +39,12 @@ class Matrix:
         if (x <= 0) or (x >= self.nRow):
             return -1
         index = bisect.bisect_left(self.cols, y, self.rows[x], self.rows[x + 1])
-        if (self.cols[index] == y):
+        if index < len(self.cols) and index >= 0 and self.cols[index] == y:
             return 1
         else:
             return 0
     
-    def Transpose(self):
+    def Transpose(self, nNewRow):
         #make transposed-tripple from csr
         triList = []
         for r in range(0, len(self.rows) - 1):
@@ -57,28 +57,35 @@ class Matrix:
         #for t in triList:
         #    print t.row, " ", t.col, " ", t.val
         #print "====="
-        sorted(triList, cmp = TrippleCmp)
+        #sorted(triList, cmp = TrippleCmp)
+        triList.sort(cmp = TrippleCmp)
         #for t in triList:
         #    print t.row, " ", t.col, " ", t.val
         
         #make tripple back to csr
-        newRows = []
+        newRows = [0]
         newCols = []
         newVals = []
-        lastRow = -1
+        lastRow = 0
         for i in range(0, len(triList)):
             #add a new row
             if triList[i].row != lastRow:
+                lastRowsLen = len(newRows)
+                for j in range(lastRow, triList[i].row - 1):
+                    newRows.append(newRows[lastRowsLen - 1])
                 newRows.append(i)
                 lastRow = triList[i].row
             #add a new col and val
             newCols.append(triList[i].col)
             newVals.append(triList[i].val)
+        for i in range(triList[len(triList) - 1].row, nNewRow - 1):
+            newRows.append(newRows[len(newRows) - 1])
         newRows.append(len(triList))
         return Matrix(newRows, newCols, newVals)
 
     @staticmethod
     def BaggingFromMatrix(mat, m):
+        #print "bagging", m
         rows = [0]
         cols = []
         vals = []
@@ -86,6 +93,7 @@ class Matrix:
         for i in range(0, m):
             ratio = random.random()
             index = int(ratio * mat.nRow)
+            #print "add elements to new mat:", mat.rows[index + 1] - mat.rows[index]
             rows.append(rows[len(rows) - 1] + (mat.rows[index + 1] - mat.rows[index]))
             for j in range(mat.rows[index], mat.rows[index + 1]):
                 cols.append(mat.cols[j])
@@ -93,7 +101,10 @@ class Matrix:
                     maxCol = j
                 vals.append(mat.vals[j])
         newMat = Matrix(rows, cols, vals)
-        return newMat.Transpose()
+        #print "after bagging:"
+        #print rows
+        #print cols
+        return newMat.Transpose(mat.nCol)
 
 #if __name__ == "__main__":
 

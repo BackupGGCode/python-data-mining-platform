@@ -59,7 +59,6 @@ def CreateMatrixFromData(dataPath, srcDict):
             if (not tarDict.has_key(word)):
                 tarDict[word] = uid
                 uid += 1
-    print tars
                 
     #3. re-open data file, using tarDict, and create csr
     f.close()
@@ -72,10 +71,11 @@ def CreateMatrixFromData(dataPath, srcDict):
                 partCols.append(tarDict[word])
         partCols = set(partCols)
         partCols = list(partCols)
+        partCols.sort()
         for col in partCols:
             cols.append(col)
             vals.append(1)
-        rows.append(len(partCols))
+        rows.append(rows[len(rows) - 1] + len(partCols))
     return [rows, cols, vals, tars, tarDict]
     
 def Train(dataPath, nTree, ratio, srcDict):
@@ -107,7 +107,10 @@ def Predict(line, model, srcDict, tarDict):
 
 if __name__ == "__main__":
     srcDict = LoadDict("dict/baidu_dict.txt")
-    [model, tarDict] = Train("data/10.tuangou", 10, 0.1, srcDict)
+    [model, tarDict] = Train("data/10.tuangou", 1, 0.1, srcDict)
+   
+    print "after train"
+
     line = u"仅售99元！原价163.2元的统一番茄汁大罐装一箱（335ML*24罐）！统一企业新年超给力巨献，买统一番茄汁更有机会获得ipod nano4"
     result = Predict(line, model, srcDict, tarDict)
     print line[0:50], " ", result

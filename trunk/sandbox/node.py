@@ -18,7 +18,13 @@ class Node:
             self.featureSet.add(self.x.cols[i])
 
     def Learn(self):
+        print "enter learn"
+
         #check is split enough(all cate in current node is same)
+        if (len(self.y) == 0):
+            self.isLeaf = True
+            self.target = -1
+            return 
         tmp = self.y[0]
         isSame = True
         for i in range(1, len(self.y)):
@@ -37,7 +43,6 @@ class Node:
         for i in range(0, len(self.y)):
             if (self.y[i] > maxCate):
                 maxCate = self.y[i]
-        print maxCate
         
         #else, calculate information-gain(IG(Y|X))
         bestGain = -1000000000
@@ -56,9 +61,8 @@ class Node:
             #H(Y) = -sigma pj*log(pj,2)
             #          j
             #H(X) = H(Y|x = 0)P(x = 0) + H(Y|x = 1)P(x = 1)
-            curGain = 0
-            print self.x.rows
             for sample in range(0, len(self.x.rows) - 1):
+                #print "get:", sample, ",", feat
                 value = self.x.Get(sample, feat)
                 if (value == 0):
                    yZeros[self.y[sample]] += 1
@@ -72,8 +76,9 @@ class Node:
             zeroGain = 0
             for j in range(0, maxCate + 1):
                 if (yZeros[j] > 0):
-                    p = yZero[j] * 1.00 / xZero
+                    p = yZeros[j] * 1.00 / xZero
                     zeroGain += -1 * p * log(p, 2)
+            print "zero gain:", zeroGain
             #calculate H(Y|x = 0) * p(x = 0)
             zeroGain *= xZero * 1.00 / (xZero + xOne)
             #calculate H(Y|x = 1)
@@ -84,6 +89,7 @@ class Node:
                     oneGain += -1 * p * log(p, 2)
             #calculate H(Y|x = 1) * p(x = 1)
             oneGain *= xOne * 1.00 / (xZero + xOne)
+            print "one gain:", zeroGain
             
             if (zeroGain + oneGain > bestGain):
                 bestGain = zeroGain + oneGain
@@ -102,36 +108,47 @@ class Node:
         rightVals = []
         leftY = []
         rightY = []
-        for sample in range(0, x.nRow):
-            if x.Get(sample, bestSplit):
+        for sample in range(0, self.x.nRow):
+            if self.x.Get(sample, bestSplit):
                 rightRows.append(rightRows[len(rightRows) - 1] + \
-                x.rows[sample + 1] - x.rows[sample])
-                for i in range(x.rows[sample], x.rows[sample + 1]):
-                    rightCols.append(x.cols[i])
-                    rightVals.append(x.vals[i])
-                rightY.append(y[sample])
+                self.x.rows[sample + 1] - self.x.rows[sample])
+                for i in range(self.x.rows[sample], self.x.rows[sample + 1]):
+                    rightCols.append(self.x.cols[i])
+                    rightVals.append(self.x.vals[i])
+                rightY.append(self.y[sample])
             else:
                 leftRows.append(leftRows[len(leftRows) - 1] + \
-                x.rows[sample + 1] - x.rows[sample])
-                for i in range(x.rows[sample, x.rows[sample + 1]]):
-                    leftCols.append(x.cols[i])
-                    leftVals.append(x.vals[i])
-                    leftY.append(y[sample])
+                self.x.rows[sample + 1] - self.x.rows[sample])
+                for i in range(self.x.rows[sample], self.x.rows[sample + 1]):
+                    leftCols.append(self.x.cols[i])
+                    leftVals.append(self.x.vals[i])
+                leftY.append(self.y[sample])
         leftMat = Matrix(leftRows, leftCols, leftVals)
         rightMat = Matrix(rightRows, rightCols, rightVals)
+        print "leftChild.mat:",len(leftMat.rows), " ", len(leftY)
+        print "rightChild.mat:",len(rightMat.rows), " ", len(rightY)
         self.leftChild = Node(leftMat, leftY)
-        self.rihgtChild = Node(rightMat, rightY)
+        self.rightChild = Node(rightMat, rightY)
+        self.leftChild.Learn()
+        self.rightChild.Learn()
 
         #delete current data
         self.x = None
         self.y = []
 
     def Predict(self, sample):
+        print "enter predict"
         if (self.isLeaf):
             return self.target
         else:
             if (sample.Get(0, self.variable)):
-                return self.leftChild.Predict(sample)
+                if (self.leftChild != None):
+                    return self.leftChild.Predict(sample)
+                else:
+                    print "error!"
             else:
-                return self.rightChild.Predict(sample)
+                if (self.rightChild != None):
+                    return self.rightChild.Predict(sample)
+                else:
+                    print "error!"
 
