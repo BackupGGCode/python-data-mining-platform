@@ -8,6 +8,7 @@ class MatrixCreater:
         savePathNode = domTree.getElementsByTagName("save_dict_path")
         self.savePath = savePathNode[0].firstChild.data
         self.saveDict = {}
+        self.termCount = {}
 
     def CreateTrainMatrix(self, inputPath, segmenter):
         f = open(inputPath, "r")
@@ -26,6 +27,9 @@ class MatrixCreater:
                 if (not self.saveDict.has_key(word)):
                     self.saveDict[word] = uid
                     uid += 1
+                    self.termCount[word] = 1
+                else:
+                    self.termCount[word] += 1
                 partCols.append(self.saveDict[word])
             partCols = set(partCols)
             partCols = list(partCols)
@@ -37,6 +41,11 @@ class MatrixCreater:
             rows.append(rows[len(rows) - 1] + \
                 len(partCols))
         f.close()
+
+        #filter features
+        for word in self.termCount:
+            if (self.termCount[word] <= 1) or (self.termCount[word] >= len(rows) * 0.7):
+                del self.saveDict[word]
 
         return [Matrix(rows, cols, vals), y] 
 
