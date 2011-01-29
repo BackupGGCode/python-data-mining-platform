@@ -1,15 +1,18 @@
 from xml.dom import minidom
 from segmenter import Segmenter
 from matrix import Matrix
+from dm_material import DmMaterial
 
 class MatrixCreater:
-    def __init__(self, confPath):
-        domTree = minidom.parse(confPath)
-        savePathNode = domTree.getElementsByTagName("save_dict_path")
-        self.savePath = savePathNode[0].firstChild.data
-        self.saveDict = {}
-        self.termCount = {}
-
+    """
+    create train matrix:
+        fill dict in DmMaterial, record:
+        1)termToId
+        2)idToTerm
+        3)termToDocCount
+        4)classToDocCount
+        and save mat-x using csr, save mat-y using list
+    """
     def CreateTrainMatrix(self, inputPath, segmenter):
         f = open(inputPath, "r")
         uid = 0
@@ -20,35 +23,54 @@ class MatrixCreater:
         for line in f:
             vec = line.split("\t")
             line = vec[0]
-            y.append(int(vec[1]))
+            target = int(vec[1])
+            y.append(target)
             wordList = segmenter.Split(line.decode("utf-8"))
+
+            #store current row's cols
             partCols = []
+
+            #create dicts and fill partCol
             for word in wordList:
-                if (not self.saveDict.has_key(word)):
-                    self.saveDict[word] = uid
+                if (not DmMaterial.termToId.has_key(word)):
+                    DmMaterial.termToId[word] = uid
+                    DmMaterial.idToTerm[uid] = word
                     uid += 1
-                    self.termCount[word] = 1
-                else:
-                    self.termCount[word] += 1
-                partCols.append(self.saveDict[word])
+                partCols.append(DmMaterial.termToId[word])
             partCols = set(partCols)
             partCols = list(partCols)
             partCols.sort()
+
+            #fill cols and vals, fill termToDocCount
             for col in partCols:
                 cols.append(col)
                 #just keep it simple now
                 vals.append(1)
+                #fill termToDocCount
+                word = DmMaterial.idToTerm[col]
+                if (not DmMaterial.termToDocCount.has_key(word)):
+                    DmMaterial.termToDocCount[word] = 1
+                else:
+                    DmMaterial.termToDocCount[word] += 1
+
+            #fill rows
             rows.append(rows[len(rows) - 1] + \
                 len(partCols))
-        f.close()
 
-        #filter features
-        for word in self.termCount:
-            if (self.termCount[word] <= 1) or (self.termCount[word] >= len(rows) * 0.7):
-                del self.saveDict[word]
+            #fill classToDocCount
+            if (not DmMaterial.classToDocCount.has_key(target)):
+                DmMaterial.classToDocCount[target] = 1
+            else:
+                DmMaterial.classToDocCount[target] += 1
+
+        #close file
+        f.close()
 
         return [Matrix(rows, cols, vals), y] 
 
+    """
+    create predict matrix using previous dict
+    """
     def CreatePredictMatrix(self, inputPath, segmenter):
         f = open(inputPath, "r")
         rows = [0]
@@ -59,11 +81,15 @@ class MatrixCreater:
             vec = line.split("\t")
             line = vec[0]
             y.append(int(vec[1]))
+
+            #split sentence
             wordList = segmenter.Split(line.decode("utf-8"))
+
+            #fill partCols, and create csr
             partCols = []
             for word in wordList:
-                if (self.saveDict.has_key(word)):
-                    partCols.append(self.saveDict[word])
+                if (DmMaterial.termToId.has_key(word)):
+                    partCols.append(DmMaterial.termToId[word])
             partCols = set(partCols)
             partCols = list(partCols)
             for col in partCols:
@@ -71,11 +97,12 @@ class MatrixCreater:
                 vals.append(1)
             rows.append(rows[len(rows) - 1] + \
                     len(partCols))
+
+        #close file
         f.close()
         return [Matrix(rows, cols, vals), y]
 
 if __name__ == "__main__":
     segmenter = Segmenter("test.conf")
-    matCreater = MatrixCreator("test.conf")
-    [trainMat, ty] = matCreater.CreateTrainMatrix("data/tuangou_titles3.txt", segmenter)
-    [predictMat, py] = matCreater.CreatePredictMatrix("data/tuangou_title3.txt", segmenter)
+    [trainMat, ty] = MatrixCreater.CreateTrainMatrix("data/tuangou_titles3.txt", segmenter)
+    [predictMat, py] = MatrixCreater.CreatePredictMatrix("data/tuangou_title3.txt", segmenter)

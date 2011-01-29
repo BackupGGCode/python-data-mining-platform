@@ -12,4 +12,9 @@
     创建矩阵 -> 根据termDict进行生成矩阵
     feature selection -> 根据feature-black_list 生成新的矩阵
     naive bayes -> 根据model，进行预测，并且能够根据termDict等输出更详细的信息
-              
+
+<Data Flow>
+    训练：
+        创建矩阵 -> Feature Selection -> naive bayes -> show result
+    测试：
+        创建矩阵 -> Feature Selection -> naive bayes -> show result
