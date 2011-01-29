@@ -21,13 +21,13 @@ class Segmenter:
         wordList = []
         while index < len(line):
             finded = False
-            for i in range(1, 4, 1) [::-1]:
+            for i in range(1, 5, 1) [::-1]:
                 if (i + index <= len(line)):
                     curWord = line[index : i + index]
                     if (self.mainDict.has_key(curWord)) and (not (self.stopWordDict.has_key(curWord))):
                         wordList.append(line[index : i + index])
-                        #index += i
-                        index += 1
+                        index += i
+                        #index += 1
                         finded = True
                         break
             if (finded):

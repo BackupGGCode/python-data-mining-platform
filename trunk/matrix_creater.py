@@ -13,7 +13,8 @@ class MatrixCreater:
         4)classToDocCount
         and save mat-x using csr, save mat-y using list
     """
-    def CreateTrainMatrix(self, inputPath, segmenter):
+    @staticmethod
+    def CreateTrainMatrix(inputPath, segmenter):
         f = open(inputPath, "r")
         uid = 0
         rows = [0]
@@ -70,7 +71,8 @@ class MatrixCreater:
     """
     create predict matrix using previous dict
     """
-    def CreatePredictMatrix(self, inputPath, segmenter):
+    @staticmethod
+    def CreatePredictMatrix(inputPath, segmenter):
         f = open(inputPath, "r")
         rows = [0]
         cols = []
@@ -91,6 +93,7 @@ class MatrixCreater:
                     partCols.append(DmMaterial.termToId[word])
             partCols = set(partCols)
             partCols = list(partCols)
+            partCols.sort()
             for col in partCols:
                 cols.append(col)
                 vals.append(1)
