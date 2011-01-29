@@ -1,15 +1,14 @@
 if __name__ == "__main__":
     segmenter = Segmenter("test.conf")
-
     [trainX, trainY] = MatrixCreater.CreateTrainMatrix("trainData", segmenter)
-    chiSquareFilter = FeatureSelecter.CreateChiSquareFilter(trainx, trainy, 0.5)
-    [trainX, trainY] = chiSquareFilter.Filt(trainX, trainY)
+    chiFilter = ChiSquareFilter()
+    chiFilter.Create(trainX, trainY, 0.8)
     nbModel = NaiveBayes()
     nbModel.Train(trainX, trainY, args...)
 
-    [testX, testY] = MatrixCreater.CreateTestMatrix("testData", segmenter)
-    [testX, testY] = chiSquareFilter.Filt(testX, testY)
-    [predictY, precision] = nb.Predict(testX, testY)
+    [testX, testY] = MatrixCreater.CreatePredictMatrix("testData", segmenter)
+    [testX, testY] = chiFilter.Filter(testX, testY)
+    [predictY, precision] = nbModel.Predict(testX, testY)
     #or
-    [predictY] = nb.Predict[testX, testY]
+    [predictY] = nbModel.Predict[testX, testY]
     print precision

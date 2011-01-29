@@ -46,12 +46,11 @@ class MatrixCreater:
                 cols.append(col)
                 #just keep it simple now
                 vals.append(1)
-                #fill termToDocCount
-                word = DmMaterial.idToTerm[col]
-                if (not DmMaterial.termToDocCount.has_key(word)):
-                    DmMaterial.termToDocCount[word] = 1
+                #fill idToDocCount
+                if (not DmMaterial.idToDocCount.has_key(col)):
+                    DmMaterial.idToDocCount[col] = 1
                 else:
-                    DmMaterial.termToDocCount[word] += 1
+                    DmMaterial.idToDocCount[col] += 1
 
             #fill rows
             rows.append(rows[len(rows) - 1] + \

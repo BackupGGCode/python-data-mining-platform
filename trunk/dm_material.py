@@ -5,6 +5,6 @@ class DmMaterial:
     #dict store id -> term
     idToTerm = {}
     #dict store term -> how-many-docs-have-term
-    termToDocCount = {}
+    idToDocCount = {}
     #dict store class -> how-many-docs-contained
     classToDocCount = {}
