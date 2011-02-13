@@ -5,7 +5,7 @@ if __name__ == "__main__":
     #init dm platfrom, include segmenter..
     config = Configuration("test.conf")
 
-    DmPlatform.Init(config, "global")
+    PyMining.Init(config, "global")
 
     matCreater = MatrixCreater(config, "mat_creater")
     [trainx, trainy] = matCreater.CreateTrainMatrix(config, "source_train")
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     """
     # config = Configuration("test.conf")
 
-    # DmPlatfrom.Init(config, "global", True), True means load from previos file
+    # PyMining.Init(config, "global", True), True means load from previos file
 
     # matCreater = MatrixCreater(config, "mat_creater", True)
     [testx, testy] = matCreater.CreateTestMatrix(config, "mat_creater")
