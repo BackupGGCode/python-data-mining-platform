@@ -1,10 +1,7 @@
 <cfg>
 
-<a>
-    <a>xxx</a>
-    <b>yyy</b>
-</a>
-<b>
-</b>
+<hello>haha</hello>
+<world>hoho</world>
+<world>xixi</world>
 
 </cfg>
