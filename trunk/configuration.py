@@ -1,6 +1,6 @@
 from xml.dom import minidom
 
-class XmlNode:
+class Configuration:
     mCurNode = None
 
     def __init__(self, node):
@@ -29,7 +29,7 @@ class XmlNode:
         return XmlNode(minidom.parse(path).childNodes[0])
 
 if __name__ == "__main__":
-    cfg = XmlNode.FromFile("sandbox/test.xml")
+    cfg = Configuration.FromFile("sandbox/test.xml")
     print cfg.GetName()
     print cfg.GetValue()
     cfg1 = cfg.GetFirstChild("hello")
