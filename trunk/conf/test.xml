@@ -1,0 +1,8 @@
+<config>
+    <segmenter>
+        <min_idf>8</min_idf>
+        <max_idf>16</max_idf>
+        <stop_word>dict/stopwords.dict</stop_word>
+        <main_dict>dict/idf.2009_10_09</main_dict>
+    </segmenter>
+</config>

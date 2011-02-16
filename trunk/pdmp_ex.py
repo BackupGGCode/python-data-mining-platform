@@ -32,9 +32,3 @@ if __name__ == "__main__":
     #nbModel = NaiveBayes(config, "naive_bayes", True)
     [predicty, precision] = nbModel.Predict(testx, testy)
     print precision
-
-    
-
-
-
-

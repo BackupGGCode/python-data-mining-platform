@@ -6,16 +6,20 @@ class Configuration:
     def __init__(self, node):
         self.mCurNode = node
 
-    def GetFirstChild(self, name):
+    
+    """
+    get first child
+    """
+    def GetChild(self, name):
         for node in self.mCurNode.childNodes:
             if node.nodeName == name:
-                return XmlNode(node)
+                return Configuration(node)
 
     def GetChilds(self, name):
         nodes = []
         for node in self.mCurNode.childNodes:
             if node.nodeName == name:
-                nodes.append(XmlNode(node))
+                nodes.append(Configuration(node))
         return nodes
 
     def GetName(self):
@@ -26,13 +30,13 @@ class Configuration:
 
     @staticmethod
     def FromFile(path):
-        return XmlNode(minidom.parse(path).childNodes[0])
+        return Configuration(minidom.parse(path).childNodes[0])
 
 if __name__ == "__main__":
     cfg = Configuration.FromFile("sandbox/test.xml")
     print cfg.GetName()
     print cfg.GetValue()
-    cfg1 = cfg.GetFirstChild("hello")
+    cfg1 = cfg.GetChild("hello")
     print cfg1.GetName()
     print cfg1.GetValue()
     cfgs = cfg.GetChilds("world")

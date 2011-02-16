@@ -1,19 +1,15 @@
 #coding=utf8=
 #mmseg
 
-from xml.dom import minidom
+from configuration import Configuration
 
 class Segmenter:
-    def __init__(self, confPath):
-        domTree = minidom.parse(confPath)
-        stopWordPathNode = domTree.getElementsByTagName("stop_word")
-        mainDictPathNode = domTree.getElementsByTagName("main_dict")
-        minIdfNode = domTree.getElementsByTagName("min_idf")
-        maxIdfNode = domTree.getElementsByTagName("max_idf")
-        self.minIdf = float(minIdfNode[0].firstChild.data)
-        self.maxIdf = float(maxIdfNode[0].firstChild.data)
-        self.stopWordDict = self.LoadStopWordDict(stopWordPathNode[0].firstChild.data)
-        self.mainDict = self.LoadMainDict(mainDictPathNode[0].firstChild.data)
+    def __init__(self, config, nodeName):
+        curNode = config.GetChild(nodeName)
+        self.minIdf = float(curNode.GetChild("min_idf").GetValue())
+        self.maxIdf = float(curNode.GetChild("max_idf").GetValue())
+        self.stopWordDict = self.LoadStopWordDict(curNode.GetChild("stop_word").GetValue())
+        self.mainDict = self.LoadMainDict(curNode.GetChild("main_dict").GetValue())
 
     def Split(self, line):
         line = line.lower()
@@ -57,8 +53,11 @@ class Segmenter:
         return dicts
 
 if __name__ == "__main__":
-    segmenter = Segmenter("test.conf")
+    
+    cfg = Configuration.FromFile("conf/test.xml")
+    segmenter = Segmenter(cfg, "segmenter")
     f = open("data/tuangou_titles3.txt")
     for line in f:
         wordList = segmenter.Split(line.decode("utf-8"))
-        print wordList
+        for word in wordList:
+            print word.encode("utf-8")
