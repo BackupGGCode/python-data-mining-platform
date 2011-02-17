@@ -1,20 +1,29 @@
-from xml.dom import minidom
 from segmenter import Segmenter
 from matrix import Matrix
-from dm_material import DmMaterial
+from py_mining import PyMining
+from configuration import Configuration
 
-class MatrixCreater:
+class ClassifierMatrix:
+    def __init__(self, config, nodeName):
+        self.node = config.GetChild(nodeName)
+        self.segmenter = Segmenter(config, "__segmenter__")
+        PyMining.Init(config, "__global__")
+        
     """
     create train matrix:
-        fill dict in DmMaterial, record:
+        fill dict in PyMining, record:
         1)termToId
         2)idToTerm
         3)termToDocCount
         4)classToDocCount
         and save mat-x using csr, save mat-y using list
     """
-    @staticmethod
-    def CreateTrainMatrix(inputPath, segmenter):
+    def CreateTrainMatrix(self, path = ""):
+        #get input-path
+        inputPath = path
+        if (inputPath == ""):
+            inputPath = self.node.GetChild("train_input").GetValue()
+
         f = open(inputPath, "r")
         uid = 0
         rows = [0]
@@ -26,18 +35,18 @@ class MatrixCreater:
             line = vec[0]
             target = int(vec[1])
             y.append(target)
-            wordList = segmenter.Split(line.decode("utf-8"))
+            wordList = self.segmenter.Split(line.decode("utf-8"))
 
             #store current row's cols
             partCols = []
 
             #create dicts and fill partCol
             for word in wordList:
-                if (not DmMaterial.termToId.has_key(word)):
-                    DmMaterial.termToId[word] = uid
-                    DmMaterial.idToTerm[uid] = word
+                if (not PyMining.termToId.has_key(word)):
+                    PyMining.termToId[word] = uid
+                    PyMining.idToTerm[uid] = word
                     uid += 1
-                partCols.append(DmMaterial.termToId[word])
+                partCols.append(PyMining.termToId[word])
             partCols = set(partCols)
             partCols = list(partCols)
             partCols.sort()
@@ -48,31 +57,41 @@ class MatrixCreater:
                 #just keep it simple now
                 vals.append(1)
                 #fill idToDocCount
-                if (not DmMaterial.idToDocCount.has_key(col)):
-                    DmMaterial.idToDocCount[col] = 1
+                if (not PyMining.idToDocCount.has_key(col)):
+                    PyMining.idToDocCount[col] = 1
                 else:
-                    DmMaterial.idToDocCount[col] += 1
+                    PyMining.idToDocCount[col] += 1
 
             #fill rows
             rows.append(rows[len(rows) - 1] + \
                 len(partCols))
 
             #fill classToDocCount
-            if (not DmMaterial.classToDocCount.has_key(target)):
-                DmMaterial.classToDocCount[target] = 1
+            if (not PyMining.classToDocCount.has_key(target)):
+                PyMining.classToDocCount[target] = 1
             else:
-                DmMaterial.classToDocCount[target] += 1
+                PyMining.classToDocCount[target] += 1
 
         #close file
         f.close()
+
+        #write dicts out
+        PyMining.WriteDict(PyMining.termToId, "term_to_id")
+        PyMining.WriteDict(PyMining.idToTerm, "id_to_term")
+        PyMining.WriteDict(PyMining.classToDocCount, "class_to_doc_count")
+        PyMining.WriteDict(PyMining.idToDocCount, "id_to_doc_cout")
 
         return [Matrix(rows, cols, vals), y] 
 
     """
     create predict matrix using previous dict
     """
-    @staticmethod
-    def CreatePredictMatrix(inputPath, segmenter):
+    def CreatePredictMatrix(self, path = ""):
+        #get input path
+        inputPath = path
+        if (inputPath == ""):
+            inputPath = self.curNode.GetChild("test_input")
+
         f = open(inputPath, "r")
         rows = [0]
         cols = []
@@ -84,13 +103,13 @@ class MatrixCreater:
             y.append(int(vec[1]))
 
             #split sentence
-            wordList = segmenter.Split(line.decode("utf-8"))
+            wordList = self.segmenter.Split(line.decode("utf-8"))
 
             #fill partCols, and create csr
             partCols = []
             for word in wordList:
-                if (DmMaterial.termToId.has_key(word)):
-                    partCols.append(DmMaterial.termToId[word])
+                if (PyMining.termToId.has_key(word)):
+                    partCols.append(PyMining.termToId[word])
             partCols = set(partCols)
             partCols = list(partCols)
             partCols.sort()
@@ -105,6 +124,7 @@ class MatrixCreater:
         return [Matrix(rows, cols, vals), y]
 
 if __name__ == "__main__":
-    segmenter = Segmenter("test.conf")
-    [trainMat, ty] = MatrixCreater.CreateTrainMatrix("data/tuangou_titles3.txt", segmenter)
-    [predictMat, py] = MatrixCreater.CreatePredictMatrix("data/tuangou_title3.txt", segmenter)
+    config = Configuration.FromFile("conf/test.xml")
+    matCreater = ClassifierMatrix(config, "__matrix__")
+    [trainMat, ty] = matCreater.CreateTrainMatrix("data/tuangou_titles3.txt")
+    [predictMat, py] = matCreater.CreatePredictMatrix("data/tuangou_title3.txt")

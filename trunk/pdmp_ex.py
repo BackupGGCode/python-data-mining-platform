@@ -3,12 +3,13 @@ if __name__ == "__main__":
     train
     """
     #init dm platfrom, include segmenter..
-    config = Configuration("test.conf")
+    config = Configuration.FromFile("test.conf")
 
     PyMining.Init(config, "global")
 
-    matCreater = MatrixCreater(config, "mat_creater")
-    [trainx, trainy] = matCreater.CreateTrainMatrix(config, "source_train")
+    matCreater = ClassifierMatrix(config, "mat_creater")
+    [trainx, trainy] = matCreater.CreateTrainMatrix("train.txt")
+    #or using matCreater.CreateTrainMatrix(), train corpus will read from config
 
     chiFilter = ChiSquareFilter(config, "filter")
     [trainx, trainy] = chiFilter.Create(trainx, trainy, .95, "avg")
@@ -23,7 +24,7 @@ if __name__ == "__main__":
 
     # PyMining.Init(config, "global", True), True means load from previos file
 
-    # matCreater = MatrixCreater(config, "mat_creater", True)
+    # matCreater = ClassifierMatrix(config, "mat_creater", True)
     [testx, testy] = matCreater.CreateTestMatrix(config, "mat_creater")
 
     #chiFilter = ChiSquareFilter(config, "filter", True)
