@@ -76,10 +76,7 @@ class ClassifierMatrix:
         f.close()
 
         #write dicts out
-        PyMining.WriteDict(PyMining.termToId, "term_to_id")
-        PyMining.WriteDict(PyMining.idToTerm, "id_to_term")
-        PyMining.WriteDict(PyMining.classToDocCount, "class_to_doc_count")
-        PyMining.WriteDict(PyMining.idToDocCount, "id_to_doc_cout")
+        PyMining.Write()
 
         return [Matrix(rows, cols, vals), y] 
 
@@ -127,4 +124,8 @@ if __name__ == "__main__":
     config = Configuration.FromFile("conf/test.xml")
     matCreater = ClassifierMatrix(config, "__matrix__")
     [trainMat, ty] = matCreater.CreateTrainMatrix("data/tuangou_titles3.txt")
-    [predictMat, py] = matCreater.CreatePredictMatrix("data/tuangou_title3.txt")
+    [predictMat, py] = matCreater.CreatePredictMatrix("data/tuangou_titles3.txt")
+    print py
+    print predictMat.rows
+    print predictMat.cols
+    print predictMat.vals

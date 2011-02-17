@@ -35,31 +35,58 @@ class PyMining:
         PyMining.nameClassToDocCount = PyMining.curNode.GetChild("class_to_doc_count").GetValue()
 
         if (loadFromFile):
-            PyMining.__ReadDict(termToId, nameTermToId)
-            PyMining.__ReadDict(idToTerm, nameIdToTerm)
-            PyMining.__ReadDict(idToDocCount, nameIdToDocCount)
-            PyMining.__ReadDict(classToDocCount, nameClassToDocCount)
+            PyMining.__ReadDict(termToId, nameTermToId, "str", "int")
+            PyMining.__ReadDict(idToTerm, nameIdToTerm, "int", "str")
+            PyMining.__ReadDict(idToDocCount, nameIdToDocCount, "int", "int")
+            PyMining.__ReadDict(classToDocCount, nameClassToDocCount, "int", "int")
         
         PyMining.isInit = True
+
+    @staticmethod
+    def Write():
+        if (not PyMining.isInit):
+            print "call init before write()"
+            return False
+        PyMining.__WriteDict(PyMining.termToId, PyMining.nameTermToId)
+        PyMining.__WriteDict(PyMining.idToTerm, PyMining.nameIdToTerm)
+        PyMining.__WriteDict(PyMining.idToDocCount, PyMining.nameIdToDocCount)
+        PyMining.__WriteDict(PyMining.classToDocCount, PyMining.nameClassToDocCount)
+        return True
         
     @staticmethod
-    def __ReadDict(dic, filename):
+    def __ReadDict(dic, filename, typeK, typeV):
         f = open(filename, "r")
         for line in file:
             line = line.decode("utf-8")
             vec = line.split("\t")
-            dic[vec[0]] = vec[1]
+            k = vec[0]
+            v = vec[1]
+            if (typeK == "str"):
+                k = k.decode("utf-8")
+            elif (typeK == "int"):
+                k = int(k)
+
+            if (typeV == "str"):
+                v = v.decode("utf-8")
+            elif (typeV == "int"):
+                v = int(v)
+            dic[k] = v
         f.close()
 
     @staticmethod
     def __WriteDict(dic, filename):
         f = open(filename, "w")
         for k,v in dic.iteritems():
-            #line = (str(k)).decode("utf-8") + (str("\t")).decode("utf-8") + (str(v)).decode("utf-8")
-            #f.write((str(k) + str("\t") + str(v)))
-            #print str(k)
-            print str("\t")
-            print str(v)
+            if isinstance(k, (str, unicode)):
+                f.write(k.encode("utf-8"))
+            else:
+                f.write(str(k))
+            f.write("\t")
+            if isinstance(v, (str, unicode)):
+                f.write(v.encode("utf-8"))
+            else:
+                f.write(str(v))
+            f.write("\n")
         f.close()
     
     @staticmethod
