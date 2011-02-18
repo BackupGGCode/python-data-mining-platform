@@ -13,6 +13,7 @@ if __name__ == "__main__":
 
     chiFilter = ChiSquareFilter(config, "filter")
     [trainx, trainy] = chiFilter.Create(trainx, trainy, .95, "avg")
+    #or using chiFilter.Create(trainx, trainy) get default setting in config
 
     nbModel = NaiveBayes(config, "naive_bayes")
     nbModel.Train(trainx, trainy)

@@ -14,6 +14,7 @@ class Configuration:
         for node in self.mCurNode.childNodes:
             if node.nodeName == name:
                 return Configuration(node)
+        return None
 
     def GetChilds(self, name):
         nodes = []

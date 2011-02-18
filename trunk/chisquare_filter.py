@@ -1,10 +1,14 @@
 from matrix import Matrix
 from matrix_creater import MatrixCreater
 from segmenter import Segmenter
-from dm_material import DmMaterial
+from py_mining import PyMining
+from configuration import Configuration
 
 class ChiSquareFilter:
-    def __init__(self):
+    def __init__(self, config, nodeName, loadFromFile):
+        self.curNode = config.GetChild("nodeName")
+        self.rate = float(self.curNode.GetChild("rate").GetValue())
+        self.method = self.curNode.GetChild("method").GetValue()
         self.blackList = {}
 
     """
@@ -36,7 +40,7 @@ class ChiSquareFilter:
                     curRowLen += 1
 
                     #debug
-                    print DmMaterial.idToTerm[x.cols[c]].encode("utf-8")
+                    print PyMining.idToTerm[x.cols[c]].encode("utf-8")
 
             newRows.append(newRows[len(newRows) - 1] + curRowLen)
         return [Matrix(newRows, newCols, newVals), y]
@@ -64,9 +68,9 @@ class ChiSquareFilter:
     X^2(t) = max { X^2(t,c) }     (max)
     @return true if succeed
     """
-    def Create(self, x, y, rate, method):
+    def Create(self, x, y):
         #check parameter
-        if not ((method == "avg") or (method == "max")):
+        if not ((self.method == "avg") or (self.method == "max")):
             print "ERROR!method should be avg or max"
             return False
 
@@ -96,9 +100,9 @@ class ChiSquareFilter:
                 #get a
                 a = aTable[cc][t]
                 #get b
-                b = DmMaterial.idToDocCount[t] - a
+                b = PyMining.idToDocCount[t] - a
                 #get c
-                c = DmMaterial.classToDocCount[cc] - a
+                c = PyMining.classToDocCount[cc] - a
                 #get d
                 d = n - a - b -c
                 #get X^2(t, c)
@@ -109,11 +113,11 @@ class ChiSquareFilter:
         #calculate chi-score of each t
         #chiScore is [score, t's id] ...(n)
         chiScore = [[0 for i in range(2)] for j in range(x.nCol)]
-        if (method == "avg"):
+        if (self.method == "avg"):
             #calculate prior prob of each c
             priorC = [0 for i in range(len(yy))]
             for i in range(len(yy)):
-                priorC[i] = float(DmMaterial.classToDocCount[i]) / n
+                priorC[i] = float(PyMining.classToDocCount[i]) / n
 
             #calculate score of each t
             for t in range(x.nCol):
@@ -132,7 +136,7 @@ class ChiSquareFilter:
         chiScore = sorted(chiScore, key = lambda chiType:chiType[0], reverse = True)
 
         #add un-selected feature-id to blackList
-        for i in range(int(rate * len(chiScore)), len(chiScore)):
+        for i in range(int(self.rate * len(chiScore)), len(chiScore)):
             self.blackList[chiScore[i][1]] = 1
 
         #output chiSquare info
