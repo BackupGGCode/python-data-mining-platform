@@ -4,10 +4,11 @@ from py_mining import PyMining
 from configuration import Configuration
 
 class ClassifierMatrix:
-    def __init__(self, config, nodeName):
+    def __init__(self, config, nodeName, loadFromFile = False):
         self.node = config.GetChild(nodeName)
         self.segmenter = Segmenter(config, "__segmenter__")
-        PyMining.Init(config, "__global__")
+        self.trained = loadFromFile
+        PyMining.Init(config, "__global__", loadFromFile)
         
     """
     create train matrix:
@@ -78,12 +79,18 @@ class ClassifierMatrix:
         #write dicts out
         PyMining.Write()
 
+        self.trained = True
+
         return [Matrix(rows, cols, vals), y] 
 
     """
     create predict matrix using previous dict
     """
     def CreatePredictMatrix(self, path = ""):
+        if (not self.trained):
+            print "train ClassifierMatrix before predict"
+            return False
+
         #get input path
         inputPath = path
         if (inputPath == ""):

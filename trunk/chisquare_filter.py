@@ -10,7 +10,13 @@ class ChiSquareFilter:
         self.rate = float(self.curNode.GetChild("rate").GetValue())
         self.method = self.curNode.GetChild("method").GetValue()
         self.logPath = self.curNode.GetChild("log_path").GetValue()
+        self.modelPath = self.curNode.GetChild("model_path").GetValue()
         self.blackList = {}
+        self.trained = loadFromFile
+        if (loadFromFile):
+            f = open(self.modelPath, "r")
+            for line in f:
+                self.blackList[int(line)] = 1
 
     """
     filter given x,y by blackList
@@ -18,6 +24,10 @@ class ChiSquareFilter:
     @return newx, newy filtered
     """
     def TestFilter(self, x, y):
+        if (not self.trained):
+            print "train filter before test"
+            return False
+
         #check parameter
         if (x.nRow <> len(y)):
             print "ERROR!x.nRow should == len(y)"
@@ -140,6 +150,13 @@ class ChiSquareFilter:
         for i in range(int(self.rate * len(chiScore)), len(chiScore)):
             self.blackList[chiScore[i][1]] = 1
 
+        #output model information
+        if (self.modelPath <> ""):
+            f = open(self.modelPath, "w")
+            for k in self.blackList:
+                f.write(str(k) + "\n")
+            f.close()
+
         #output chiSquare info
         if (self.logPath <> ""):
             f = open(self.logPath, "w")
@@ -151,6 +168,10 @@ class ChiSquareFilter:
                 term = PyMining.idToTerm[chiScore[i][1]]
                 score = chiScore[i][0]
                 f.write(term.encode("utf-8") + " " + str(score) + "\n")
+            f.close()
+
+        self.trained = True
+
         return True
 
 if __name__ == "__main__":
@@ -159,5 +180,4 @@ if __name__ == "__main__":
     matCreater = ClassifierMatrix(config, "__matrix__")
     [trainx, trainy] = matCreater.CreateTrainMatrix("data/tuangou_titles3.txt")
     chiFilter = ChiSquareFilter(config, "__filter__")
-    chiFilter.TrainFilter(trainx, trainy)
-  
+    chiFilter.TrainFilter(trainx, trainy) 

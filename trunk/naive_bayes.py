@@ -7,7 +7,7 @@ from chisquare_filter import ChiSquareFilter
 from dm_material import DmMaterial
 
 class NaiveBayes:
-    def __init__(self):
+    def __init__(self, config, nodeName, loadFromFile = False):
         #store variable(term)'s likelihood to each class
         self.vTable = []
         #store prior of each class
