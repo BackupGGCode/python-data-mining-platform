@@ -42,7 +42,7 @@ class ChiSquareFilter:
             curRowLen = 0
 
             #debug
-            print "===new doc==="
+            #print "===new doc==="
 
             for c in range(x.rows[r], x.rows[r + 1]):
                 if not self.blackList.has_key(x.cols[c]):
@@ -51,7 +51,7 @@ class ChiSquareFilter:
                     curRowLen += 1
 
                     #debug
-                    print PyMining.idToTerm[x.cols[c]].encode("utf-8")
+                    #print PyMining.idToTerm[x.cols[c]].encode("utf-8")
 
             newRows.append(newRows[len(newRows) - 1] + curRowLen)
         return [Matrix(newRows, newCols, newVals), y]

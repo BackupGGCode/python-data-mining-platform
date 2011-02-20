@@ -35,10 +35,10 @@ class PyMining:
         PyMining.nameClassToDocCount = PyMining.curNode.GetChild("class_to_doc_count").GetValue()
 
         if (loadFromFile):
-            PyMining.__ReadDict(termToId, nameTermToId, "str", "int")
-            PyMining.__ReadDict(idToTerm, nameIdToTerm, "int", "str")
-            PyMining.__ReadDict(idToDocCount, nameIdToDocCount, "int", "int")
-            PyMining.__ReadDict(classToDocCount, nameClassToDocCount, "int", "int")
+            PyMining.__ReadDict(PyMining.termToId, PyMining.nameTermToId, "str", "int")
+            PyMining.__ReadDict(PyMining.idToTerm, PyMining.nameIdToTerm, "int", "str")
+            PyMining.__ReadDict(PyMining.idToDocCount, PyMining.nameIdToDocCount, "int", "int")
+            PyMining.__ReadDict(PyMining.classToDocCount, PyMining.nameClassToDocCount, "int", "int")
         
         PyMining.isInit = True
 
@@ -56,19 +56,15 @@ class PyMining:
     @staticmethod
     def __ReadDict(dic, filename, typeK, typeV):
         f = open(filename, "r")
-        for line in file:
+        for line in f:
             line = line.decode("utf-8")
             vec = line.split("\t")
             k = vec[0]
             v = vec[1]
-            if (typeK == "str"):
-                k = k.decode("utf-8")
-            elif (typeK == "int"):
+            if (typeK == "int"):
                 k = int(k)
 
-            if (typeV == "str"):
-                v = v.decode("utf-8")
-            elif (typeV == "int"):
+            if (typeV == "int"):
                 v = int(v)
             dic[k] = v
         f.close()

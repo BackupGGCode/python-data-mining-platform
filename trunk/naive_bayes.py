@@ -1,10 +1,11 @@
 import math
+import pickle
 
 from matrix import Matrix
-from matrix_creater import MatrixCreater
+from classifier_matrix import ClassifierMatrix
 from segmenter import Segmenter
-from chisquare_filter import ChiSquareFilter
-from dm_material import DmMaterial
+from py_mining import PyMining
+from configuration import Configuration 
 
 class NaiveBayes:
     def __init__(self, config, nodeName, loadFromFile = False):
@@ -13,7 +14,17 @@ class NaiveBayes:
         #store prior of each class
         self.cPrior = []
         #store isTrained by data
-        self.trained = False
+        self.trained = loadFromFile
+
+        self.curNode = config.GetChild(nodeName)
+        self.modelPath = self.curNode.GetChild("model_path").GetValue()
+        self.logPath = self.curNode.GetChild("log_path").GetValue()
+
+        if (loadFromFile):
+            f = open(self.modelPath, "r")
+            modelStr = pickle.load(f)
+            [self.vTable, self.cPrior] = pickle.loads(modelStr)
+            f.close()
 
     def Train(self, x, y):
         #check parameters
@@ -52,9 +63,16 @@ class NaiveBayes:
             self.cPrior[i] /= float(len(y))
 
         self.trained = True
+
+        #dump model path
+        f = open(self.modelPath, "w")
+        modelStr = pickle.dumps([self.vTable, self.cPrior], 1)
+        pickle.dump(modelStr, f)
+        f.close()
+
         return True
 
-    def Predict(self, x, y):
+    def Test(self, x, y):
         #check parameter
         if (not self.trained):
             print "Error!, not trained!"
@@ -67,13 +85,17 @@ class NaiveBayes:
         retY = []
         correct = 0
 
+        if (self.logPath <> ""):
+            f = open(self.logPath, "w")
+
         #predict all doc one by one
         for r in range(x.nRow):
             bestY = -1
             maxP = -1000000000
 
             #debug
-            print "\n ===============new doc================="
+            if (self.logPath <> ""):
+                f.write("\n ===============new doc=================")
 
             #calculate best p
             for target in range(len(self.cPrior)):
@@ -81,7 +103,8 @@ class NaiveBayes:
                 curP += math.log(self.cPrior[target])
                 
                 #debug
-                print "<target> : ", target
+                if (self.logPath <> ""):
+                    f.write("<target> : " + str(target) + "\n")
 
                 for c in range(x.rows[r], x.rows[r + 1]):
                     if (self.vTable[x.cols[c]][target] == 0):
@@ -90,17 +113,18 @@ class NaiveBayes:
                         curP += math.log(self.vTable[x.cols[c]][target])
 
                     #debug
-                    term = DmMaterial.idToTerm[x.cols[c]]
-                    prob = math.log(self.vTable[x.cols[c]][target] + 1e-7) 
-                    print term.encode("utf-8"), ":", x.cols[c], ":", prob
-
+                    if (self.logPath <> ""):
+                        term = PyMining.idToTerm[x.cols[c]]
+                        prob = math.log(self.vTable[x.cols[c]][target] + 1e-7) 
+                        f.write(term.encode("utf-8") + ":" + str(x.cols[c]) + ":" + str(prob) + "\n")
 
                 if (curP > maxP):
                     bestY = target
                     maxP = curP
 
                 #debug
-                print "curP:", curP
+                if (self.logPath <> ""):
+                    f.write("curP:" + str(curP) + "\n")
 
             if (bestY < 0):
                 print "best y < 0, error!"
@@ -109,22 +133,26 @@ class NaiveBayes:
                 correct += 1
             #debug
             else:
-                print "predict error!"
-
+                if (self.logPath <> ""):
+                    f.write("predict error!")
             retY.append(bestY)
+
+        if (self.logPath <> ""):
+            f.close()
         
         return [retY, float(correct) / len(retY)]
 
 if __name__ == "__main__":
-    segmenter = Segmenter("test.conf")
-    [trainX, trainY] = MatrixCreater.CreateTrainMatrix("data/train.txt", segmenter)
-    chiFilter = ChiSquareFilter()
-    chiFilter.Create(trainX, trainY, .97, "avg")
-    nbModel = NaiveBayes()
-    nbModel.Train(trainX, trainY)
+    config = Configuration.FromFile("conf/test.xml")
+    PyMining.Init(config, "__global__")
+    matCreater = ClassifierMatrix(config, "__matrix__")
+    [trainx, trainy] = matCreater.CreateTrainMatrix("data/train.txt")
 
-    [testX, testY] = MatrixCreater.CreatePredictMatrix("data/test.txt", segmenter)
-    [testX, testY] = chiFilter.Filter(testX, testY)
+    nbModel = NaiveBayes(config, "naive_bayes")
+    nbModel.Train(trainx, trainy)
+
+    [testx, testy] = matCreater.CreatePredictMatrix("data/test.txt")
+    [resultY, precision] = nbModel.Test(testx, testy)
     
     """
     print "testX, rows, cols ,vals"
@@ -133,5 +161,4 @@ if __name__ == "__main__":
     print testX.cols
     """
 
-    [predictY, precision] = nbModel.Predict(testX, testY)
     print precision

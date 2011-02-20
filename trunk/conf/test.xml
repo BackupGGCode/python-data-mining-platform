@@ -17,8 +17,14 @@
     </__global__>
 
     <__filter__>
-        <rate>0.98</rate>
+        <rate>0.5</rate>
         <method>max</method>
         <log_path>mining/filter.log</log_path>
+        <model_path>mining/filter.model</model_path>
     </__filter__>
+
+    <naive_bayes>
+        <model_path>mining/naive_bayes.model</model_path>
+        <log_path>mining/naive_bayes.log</log_path>
+    </naive_bayes>
 </config>
