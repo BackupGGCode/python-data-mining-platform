@@ -5,14 +5,14 @@ if __name__ == "__main__":
     #init dm platfrom, include segmenter..
     config = Configuration.FromFile("test.conf")
 
-    PyMining.Init(config, "global")
+    PyMining.Init(config, "__global__")
 
-    matCreater = ClassifierMatrix(config, "mat_creater")
+    matCreater = ClassifierMatrix(config, "__matrix__")
     [trainx, trainy] = matCreater.CreateTrainMatrix("train.txt")
     #or using matCreater.CreateTrainMatrix(), train corpus will read from config
 
-    chiFilter = ChiSquareFilter(config, "filter")
-    [trainx, trainy] = chiFilter.Create(trainx, trainy, .95, "avg")
+    chiFilter = ChiSquareFilter(config, "__filter__")
+    chiFilter.TrainFilter(trainx, trainy)
     #or using chiFilter.Create(trainx, trainy) get default setting in config
 
     nbModel = NaiveBayes(config, "naive_bayes")
@@ -21,15 +21,15 @@ if __name__ == "__main__":
     """
     test
     """
-    # config = Configuration("test.conf")
+    # config = Configuration.FromFile("test.conf")
 
-    # PyMining.Init(config, "global", True), True means load from previos file
+    # PyMining.Init(config, "__global__", True), True means load from previos file
 
-    # matCreater = ClassifierMatrix(config, "mat_creater", True)
-    [testx, testy] = matCreater.CreateTestMatrix(config, "mat_creater")
+    # matCreater = ClassifierMatrix(config, "__matrix__", True)
+    [testx, testy] = matCreater.CreateTestMatrix("test.txt")
 
-    #chiFilter = ChiSquareFilter(config, "filter", True)
-    [testx, testy] = chiFilter.Filter(testx, testy)
+    #chiFilter = ChiSquareFilter(config, "__filter__", True)
+    [testx, testy] = chiFilter.TestFilter(testx, testy)
 
     #nbModel = NaiveBayes(config, "naive_bayes", True)
     [predicty, precision] = nbModel.Predict(testx, testy)

@@ -1,14 +1,15 @@
 from matrix import Matrix
-from matrix_creater import MatrixCreater
+from classifier_matrix import ClassifierMatrix
 from segmenter import Segmenter
 from py_mining import PyMining
 from configuration import Configuration
 
 class ChiSquareFilter:
-    def __init__(self, config, nodeName, loadFromFile):
-        self.curNode = config.GetChild("nodeName")
+    def __init__(self, config, nodeName, loadFromFile = False):
+        self.curNode = config.GetChild(nodeName)
         self.rate = float(self.curNode.GetChild("rate").GetValue())
         self.method = self.curNode.GetChild("method").GetValue()
+        self.logPath = self.curNode.GetChild("log_path").GetValue()
         self.blackList = {}
 
     """
@@ -16,7 +17,7 @@ class ChiSquareFilter:
     x's row should == y's row
     @return newx, newy filtered
     """
-    def Filter(self, x, y):
+    def TestFilter(self, x, y):
         #check parameter
         if (x.nRow <> len(y)):
             print "ERROR!x.nRow should == len(y)"
@@ -49,7 +50,7 @@ class ChiSquareFilter:
     create a blackList by given x,y
     @rate is a percentage of selected feature
     using next formulation:
-    X^2(t, c) =   N * (AD - CD)^2
+    X^2(t, c) =   N * (AD - CB)^2
                 ____________________
                 (A+C)(B+D)(A+B)(C+D)
     A,B,C,D is doc-count
@@ -68,7 +69,7 @@ class ChiSquareFilter:
     X^2(t) = max { X^2(t,c) }     (max)
     @return true if succeed
     """
-    def Create(self, x, y):
+    def TrainFilter(self, x, y):
         #check parameter
         if not ((self.method == "avg") or (self.method == "max")):
             print "ERROR!method should be avg or max"
@@ -106,7 +107,7 @@ class ChiSquareFilter:
                 #get d
                 d = n - a - b -c
                 #get X^2(t, c)
-                numberator = float(n) * (a*d - c*d) * (a*d - c*d)
+                numberator = float(n) * (a*d - c*b) * (a*d - c*b)
                 denominator = float(a+c) * (b+d) * (a+b) * (c+d)
                 chiTable[cc][t] = numberator / denominator
 
@@ -140,19 +141,23 @@ class ChiSquareFilter:
             self.blackList[chiScore[i][1]] = 1
 
         #output chiSquare info
-        print "chiSquare info:"
-        print "=======selected========"
-        for i in range(len(chiScore)):
-            if (i == int(rate * len(chiScore))):
-                print "========unselected======="
-            term = DmMaterial.idToTerm[chiScore[i][1]]
-            score = chiScore[i][0]
-            print term.encode("utf-8"), " ", score
+        if (self.logPath <> ""):
+            f = open(self.logPath, "w")
+            f.write("chiSquare info:\n")
+            f.write("=======selected========\n")
+            for i in range(len(chiScore)):
+                if (i == int(self.rate * len(chiScore))):
+                    f.write("========unselected=======\n")
+                term = PyMining.idToTerm[chiScore[i][1]]
+                score = chiScore[i][0]
+                f.write(term.encode("utf-8") + " " + str(score) + "\n")
         return True
 
 if __name__ == "__main__":
-    segmenter = Segmenter("test.conf")
-    [trainX, trainY] = MatrixCreater.CreateTrainMatrix("data/train.txt", segmenter)
-    chiFilter = ChiSquareFilter()
-    chiFilter.Create(trainX, trainY, 0.8, "max")
+    config = Configuration.FromFile("conf/test.xml")
+    PyMining.Init(config, "__global__")
+    matCreater = ClassifierMatrix(config, "__matrix__")
+    [trainx, trainy] = matCreater.CreateTrainMatrix("data/tuangou_titles3.txt")
+    chiFilter = ChiSquareFilter(config, "__filter__")
+    chiFilter.TrainFilter(trainx, trainy)
   
