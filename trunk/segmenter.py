@@ -46,9 +46,9 @@ class Segmenter:
         for line in f:
             line = line.decode("utf-8")
             vec = line.split("\t")
-            vec[1] = float(vec[1])
-            if (vec[1] > self.minIdf) and (vec[1] < self.maxIdf):
-                dicts[vec[0]] = vec[1]
+            vec[2] = float(vec[2])
+            if (vec[2] > self.minIdf) and (vec[2] < self.maxIdf):
+                dicts[vec[0]] = vec[2]
         f.close()
         return dicts
 
