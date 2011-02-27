@@ -1,9 +1,6 @@
 <config>
     <__segmenter__>
-        <min_idf>0</min_idf>
-        <max_idf>8</max_idf>
-        <stop_word>dict/stopwords.dict</stop_word>
-        <main_dict>dict/dict_chs_utf8.txt</main_dict>
+        <main_dict>dict/dict.main</main_dict>
     </__segmenter__>
 
     <__matrix__>

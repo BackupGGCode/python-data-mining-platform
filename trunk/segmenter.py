@@ -6,9 +6,6 @@ from configuration import Configuration
 class Segmenter:
     def __init__(self, config, nodeName):
         curNode = config.GetChild(nodeName)
-        self.minIdf = float(curNode.GetChild("min_idf").GetValue())
-        self.maxIdf = float(curNode.GetChild("max_idf").GetValue())
-        self.stopWordDict = self.LoadStopWordDict(curNode.GetChild("stop_word").GetValue())
         self.mainDict = self.LoadMainDict(curNode.GetChild("main_dict").GetValue())
 
     def Split(self, line):
@@ -20,7 +17,7 @@ class Segmenter:
             for i in range(1, 5, 1) [::-1]:
                 if (i + index <= len(line)):
                     curWord = line[index : i + index]
-                    if (self.mainDict.has_key(curWord)) and (not (self.stopWordDict.has_key(curWord))):
+                    if (self.mainDict.has_key(curWord)): 
                         wordList.append(line[index : i + index])
                         index += i
                         #index += 1
@@ -31,24 +28,14 @@ class Segmenter:
             index += 1
         return wordList
 
-    def LoadStopWordDict(self, path):
-        f = open(path, "r")
-        dicts = {}
-        for line in f:
-            line = line.decode("utf-8")
-            dicts[line] = 1
-        f.close()
-        return dicts
-
     def LoadMainDict(self, path):
         f = open(path, "r")
         dicts = {}
         for line in f:
             line = line.decode("utf-8")
-            vec = line.split("\t")
-            vec[2] = float(vec[2])
-            if (vec[2] > self.minIdf) and (vec[2] < self.maxIdf):
-                dicts[vec[0]] = vec[2]
+            if (line.find("\n") >= 0):
+                line = line[0:line.find("\n")]
+            dicts[line] = 1
         f.close()
         return dicts
 
