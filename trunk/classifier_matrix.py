@@ -83,6 +83,29 @@ class ClassifierMatrix:
 
         return [Matrix(rows, cols, vals), y] 
 
+    def CreatePredictSample(self, src):
+        if (not self.trained):
+            print "train Classifier Matrix before predict"
+        
+        #split sentence
+        #if src is read from utf-8 file directly, 
+        #    should using CreatePredictSample(src.decode("utf-8"))
+        wordList = self.segmenter.Split(src)
+
+        #fill partCols, and create csr
+        partCols = []
+        for word in wordList:
+            if (PyMining.termToId.has_key(word)):
+                partCols.append(PyMining.termToId[word])
+        partCols = set(partCols)
+        partCols = list(partCols)
+        partCols.sort()
+        for col in partCols:
+            cols.append(col)
+            vals.append(1)
+
+        return [cols, vals]
+
     """
     create predict matrix using previous dict
     """

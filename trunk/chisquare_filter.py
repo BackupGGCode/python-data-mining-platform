@@ -18,12 +18,31 @@ class ChiSquareFilter:
             for line in f:
                 self.blackList[int(line)] = 1
 
+    def SampleFilter(self, cols, vals):
+        if (not self.trained):
+            print "train filter before test"
+            return False
+
+        #check parameter
+        if (len(cols) <> len(vals)):
+            print "length of cols should equals length of vals"
+            return False
+
+        #filter sample
+        newCols = []
+        newVals = []
+        for c in range(0, len(cols)):
+            if not self.blackList.has_key(cols[c]):
+                newCols.append(cols[c])
+                newVals.append(vals[c])
+
+        return [cols, vals]
     """
     filter given x,y by blackList
     x's row should == y's row
     @return newx, newy filtered
     """
-    def TestFilter(self, x, y):
+    def MatrixFilter(self, x, y):
         if (not self.trained):
             print "train filter before test"
             return False

@@ -18,7 +18,7 @@ if __name__ == "__main__":
     nbModel.Train(trainx, trainy)
 
     [testx, testy] = matCreater.CreatePredictMatrix("data/test.txt")
-    [testx, testy] = chiFilter.TestFilter(testx, testy)
+    [testx, testy] = chiFilter.MatrixFilter(testx, testy)
     [resultY, precision] = nbModel.Test(testx, testy)
     
     print precision

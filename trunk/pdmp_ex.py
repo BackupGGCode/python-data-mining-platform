@@ -29,7 +29,7 @@ if __name__ == "__main__":
     [testx, testy] = matCreater.CreateTestMatrix("test.txt")
 
     #chiFilter = ChiSquareFilter(config, "__filter__", True)
-    [testx, testy] = chiFilter.TestFilter(testx, testy)
+    [testx, testy] = chiFilter.MatrixFilter(testx, testy)
 
     #nbModel = NaiveBayes(config, "naive_bayes", True)
     [predicty, precision] = nbModel.Predict(testx, testy)
