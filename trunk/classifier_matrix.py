@@ -92,6 +92,8 @@ class ClassifierMatrix:
         #    should using CreatePredictSample(src.decode("utf-8"))
         wordList = self.segmenter.Split(src)
 
+        cols = []
+        vals = []
         #fill partCols, and create csr
         partCols = []
         for word in wordList:

@@ -40,7 +40,6 @@ class Segmenter:
         return dicts
 
 if __name__ == "__main__":
-    
     cfg = Configuration.FromFile("conf/test.xml")
     segmenter = Segmenter(cfg, "segmenter")
     f = open("data/tuangou_titles3.txt")

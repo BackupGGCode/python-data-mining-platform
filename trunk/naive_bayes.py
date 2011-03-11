@@ -72,6 +72,48 @@ class NaiveBayes:
 
         return True
 
+    def TestSample(self, cols, vals):
+        #check parameter
+        if (not self.trained):
+            print "Error!, not trained!"
+            return False
+        if (len(cols) <> len(vals)):
+            print "Error! len of cols should == len of vals"
+            return False
+
+        #calculate best p
+        targetP = []
+        maxP = -1000000000
+        for target in range(len(self.cPrior)):
+            curP = 0
+            curP += math.log(self.cPrior[target])
+            
+            for c in range(0, len(cols)):
+                if (self.vTable[cols[c]][target] == 0):
+                    curP += math.log(1e-7)
+                else:
+                    curP += math.log(self.vTable[cols[c]][target])
+                #debug
+                #if (self.logPath <> ""):
+                #    term = PyMining.idToTerm[cols[c]]
+                #    prob = math.log(self.vTable[cols[c]][target] + 1e-7) 
+                #    f.write(term.encode("utf-8") + ":" + str(cols[c]) + ":" + str(prob) + "\n")
+            
+            targetP.append(curP)
+            if (curP > maxP):
+                bestY = target
+                maxP = curP
+
+        #normalize probable
+        ret = []
+        total = 0
+        for i in range(len(targetP)):
+            total += math.exp(targetP[i])
+        for i in range(len(targetP)):
+            ret.append((i, math.exp(targetP[i]) / total))
+
+        return tuple(ret)
+
     def Test(self, x, y):
         #check parameter
         if (not self.trained):
