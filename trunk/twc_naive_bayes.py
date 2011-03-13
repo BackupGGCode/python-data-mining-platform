@@ -111,12 +111,15 @@ class TwcNaiveBayes:
             return -1
 
         #debug
-        #print "new doc:"
+        print "new doc:"
 
         #get min likelihood
         #minL = sys.maxint
+        retList = []
+
         maxL = -1
         bestClass = 0
+        sumProb = 0
         for classIndex in range(len(self.yy)):
             curL = 0
             for c in range(len(cols)):
@@ -124,20 +127,14 @@ class TwcNaiveBayes:
                 termFreq = vals[c]
                 curL += termFreq * self.weights[classIndex][termId]
 
-                #debug
-                #print PyMining.idToTerm[termId].encode("utf-8")
+            retList.append([self.yy[classIndex], curL]) 
+            sumProb += curL
 
-            #if (curL < minL):
-            #    minL = curL
-            #    bestClass = self.yy[classIndex]
-            if (curL > maxL):
-                maxL = curL
-                bestClass = self.yy[classIndex]
-
-            #debug
-            #print "class:", classIndex, " score:", curL
-        
-        return bestClass
+        for i in range(len(retList)):
+            retList[i][1] /= (sumProb + 1e-10)
+            retList[i] = tuple(retList[i])
+       
+        return tuple(retList)
 
     """
     get result of a single-line-sample
@@ -146,12 +143,9 @@ class TwcNaiveBayes:
         #check parameter
         if (not self.trained):
             print "Error!, not trained!"
-            return -1
+            return ()
 
         ret = self.__GetBestTarget(cols, vals)
-        if (ret < 0):
-            print "Get result of sample error!"
-            return -1
         return ret
 
     """
@@ -165,7 +159,13 @@ class TwcNaiveBayes:
             ret = self.__GetBestTarget(x.cols[x.rows[r]:x.rows[r + 1]], x.vals[x.rows[r]:x.rows[r + 1]])
             retY.append(ret)
             if (y <> None):
-                if (ret == y[r]):
+                bestL = -1
+                bestTarget = 0
+                for tup in ret:
+                    if (tup[1] > bestL):
+                        bestL = tup[1]
+                        bestTarget = tup[0]
+                if (bestTarget == y[r]):
                     correct += 1
 
         if (y <> None):
@@ -183,4 +183,3 @@ if __name__ == "__main__":
 
     [testx, testy] = matCreater.CreatePredictMatrix("data/test.txt")
     retY = nbModel.TestMatrix(testx, testy)
-    print retY

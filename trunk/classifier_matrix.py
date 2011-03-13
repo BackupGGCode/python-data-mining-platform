@@ -109,14 +109,14 @@ class ClassifierMatrix:
         return [Matrix(rows, cols, vals), y] 
 
     def CreatePredictSample(self, src):
+        print src
         if (not self.trained):
             print "train Classifier Matrix before predict"
         
         #split sentence
         #if src is read from utf-8 file directly, 
         #    should using CreatePredictSample(src.decode("utf-8"))
-        wordList = self.segmenter.Split(src)
-
+        wordList = self.segmenter.Split(src.decode("utf-8"))
         cols = []
         vals = []
         #fill partCols, and create csr
