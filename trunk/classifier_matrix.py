@@ -69,7 +69,7 @@ class ClassifierMatrix:
             for col in partCols:
                 cols.append(col)
                 #fill vals with termFrequent
-                vals.append(float(termFres[col]) / curWordCount)
+                vals.append(termFres[col])
                 #fill idToDocCount
                 if (not PyMining.idToDocCount.has_key(col)):
                     PyMining.idToDocCount[col] = 1
@@ -90,12 +90,13 @@ class ClassifierMatrix:
         for termId in PyMining.idToTerm.keys():
             PyMining.idToIdf[termId] = math.log(float(len(rows) - 1) / (PyMining.idToDocCount[termId] + 1))
 
+        #NOTE: now, not mul idf to vals, because not all algorithms need tf * idf
         #change matrix's vals using tf-idf represent
-        for r in range(len(rows) - 1):
-            for c in range(rows[r], rows[r + 1]):
-                termId = cols[c]
-                #idf(i) = log(|D| / |{d (ti included)}| + 1
-                vals[c] = vals[c] * PyMining.idToIdf[termId]
+        #for r in range(len(rows) - 1):
+        #    for c in range(rows[r], rows[r + 1]):
+        #        termId = cols[c]
+        #        #idf(i) = log(|D| / |{d (ti included)}| + 1
+        #        vals[c] = vals[c] * PyMining.idToIdf[termId]
 
         #close file
         f.close()
@@ -134,7 +135,7 @@ class ClassifierMatrix:
         partCols.sort()
         for col in partCols:
             cols.append(col)
-            vals.append((float(termFreqs[col]) / len(wordList)) * PyMining.idToIdf[col])
+            vals.append(termFreqs[col])
 
         return [cols, vals]
 
@@ -183,7 +184,7 @@ class ClassifierMatrix:
             partCols.sort()
             for col in partCols:
                 cols.append(col)
-                vals.append((float(termFreqs[col]) / curWordCount) * PyMining.idToIdf[col]) 
+                vals.append(termFreqs[col])
             rows.append(rows[len(rows) - 1] + \
                     len(partCols))
 
