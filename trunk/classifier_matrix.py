@@ -116,7 +116,7 @@ class ClassifierMatrix:
         #split sentence
         #if src is read from utf-8 file directly, 
         #    should using CreatePredictSample(src.decode("utf-8"))
-        wordList = self.segmenter.Split(src.decode("utf-8"))
+        wordList = self.segmenter.Split(src)
         cols = []
         vals = []
         #fill partCols, and create csr

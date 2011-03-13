@@ -22,6 +22,6 @@ if __name__ == "__main__":
     nbModel.Train(trainx, trainy)
 
     inputStr = "仅售59元！原价108元的花园巴西烤肉自助餐一人次任吃（蛇口店、购物公园店全时段通用），另赠送两张10元现金抵用券！邀请好友返利10元！"
-    [cols, vals] = matCreater.CreatePredictSample(inputStr)
+    [cols, vals] = matCreater.CreatePredictSample(inputStr.decode("utf-8"))
     retY = nbModel.TestSample(cols, vals)
     print retY
