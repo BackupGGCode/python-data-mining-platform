@@ -8,12 +8,15 @@ class PyMining:
     idToDocCount = {}
     #dict store class -> how-many-docs-contained
     classToDocCount = {}
+    #inverse document frequent of termId
+    idToIdf = {}
 
     #filename of above
     nameTermToId = ""
     nameIdToTerm = ""
     nameIdToDocCount = ""
     nameClassToDocCount = ""
+    nameIdToIdf = ""
 
     #isInit
     isInit = False
@@ -27,18 +30,21 @@ class PyMining:
         PyMining.idToTerm = {}
         PyMining.idToDocCount = {}
         PyMining.classToDocCount = {}
+        PyMining.idToIdf = {}
 
         PyMining.curNode = config.GetChild(nodeName)
         PyMining.nameTermToId = PyMining.curNode.GetChild("term_to_id").GetValue()
         PyMining.nameIdToTerm = PyMining.curNode.GetChild("id_to_term").GetValue()
         PyMining.nameIdToDocCount = PyMining.curNode.GetChild("id_to_doc_count").GetValue()
         PyMining.nameClassToDocCount = PyMining.curNode.GetChild("class_to_doc_count").GetValue()
+        PyMining.nameIdToIdf = PyMining.curNode.GetChild("id_to_idf").GetValue()
 
         if (loadFromFile):
             PyMining.__ReadDict(PyMining.termToId, PyMining.nameTermToId, "str", "int")
             PyMining.__ReadDict(PyMining.idToTerm, PyMining.nameIdToTerm, "int", "str")
             PyMining.__ReadDict(PyMining.idToDocCount, PyMining.nameIdToDocCount, "int", "int")
             PyMining.__ReadDict(PyMining.classToDocCount, PyMining.nameClassToDocCount, "int", "int")
+            PyMining.__ReadDict(PyMining.idToIdf, PyMining.nameIdToIdf, "int", "float")
         
         PyMining.isInit = True
 
@@ -51,6 +57,7 @@ class PyMining:
         PyMining.__WriteDict(PyMining.idToTerm, PyMining.nameIdToTerm)
         PyMining.__WriteDict(PyMining.idToDocCount, PyMining.nameIdToDocCount)
         PyMining.__WriteDict(PyMining.classToDocCount, PyMining.nameClassToDocCount)
+        PyMining.__WriteDict(PyMining.idToIdf, PyMining.nameIdToIdf)
         return True
         
     @staticmethod
@@ -66,6 +73,9 @@ class PyMining:
 
             if (typeV == "int"):
                 v = int(v)
+            elif (typeV == "float"):
+                v= float(v)
+
             dic[k] = v
         f.close()
 

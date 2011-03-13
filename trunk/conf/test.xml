@@ -11,6 +11,7 @@
         <id_to_term>mining/id_to_term</id_to_term>
         <id_to_doc_count>mining/id_to_doc_count</id_to_doc_count>
         <class_to_doc_count>mining/class_to_doc_count</class_to_doc_count>
+        <id_to_idf>mining/id_to_idf</id_to_idf>
     </__global__>
 
     <__filter__>
