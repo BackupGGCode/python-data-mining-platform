@@ -115,8 +115,8 @@ class ChiSquareFilter:
 
         #create a table stores X^2(t, c)
         #create a table stores A(belong to c, and include t
-        chiTable = [[0 for i in range(x.nCol)] for j in range(len(yy))]
-        aTable = [[0 for i in range(x.nCol)] for j in range(len(yy))]
+        chiTable = [[0 for i in range(x.nCol)] for j in range(yy[len(yy) - 1] + 1)]
+        aTable = [[0 for i in range(x.nCol)] for j in range(yy[len(yy) - 1] + 1)]
 
         #calculate a-table
         for row in range(x.nRow):
@@ -128,39 +128,39 @@ class ChiSquareFilter:
         for t in range(x.nCol):
             for cc in range(len(yy)):
                 #get a
-                a = aTable[cc][t]
+                a = aTable[yy[cc]][t]
                 #get b
                 b = PyMining.idToDocCount[t] - a
                 #get c
-                c = PyMining.classToDocCount[cc] - a
+                c = PyMining.classToDocCount[yy[cc]] - a
                 #get d
                 d = n - a - b -c
                 #get X^2(t, c)
                 numberator = float(n) * (a*d - c*b) * (a*d - c*b)
                 denominator = float(a+c) * (b+d) * (a+b) * (c+d)
-                chiTable[cc][t] = numberator / denominator
+                chiTable[yy[cc]][t] = numberator / denominator
 
         #calculate chi-score of each t
         #chiScore is [score, t's id] ...(n)
         chiScore = [[0 for i in range(2)] for j in range(x.nCol)]
         if (self.method == "avg"):
             #calculate prior prob of each c
-            priorC = [0 for i in range(len(yy))]
+            priorC = [0 for i in range(yy[len(yy) - 1] + 1)]
             for i in range(len(yy)):
-                priorC[i] = float(PyMining.classToDocCount[i]) / n
+                priorC[yy[i]] = float(PyMining.classToDocCount[yy[i]]) / n
 
             #calculate score of each t
             for t in range(x.nCol):
                 chiScore[t][1] = t
                 for c in range(len(yy)):
-                    chiScore[t][0] += priorC[c] * chiTable[c][t]
+                    chiScore[t][0] += priorC[yy[c]] * chiTable[yy[c]][t]
         else:
             #calculate score of each t
             for t in range(x.nCol):
                 chiScore[t][1] = t
                 for c in range(len(yy)):
-                    if (chiScore[t][0] < chiTable[c][t]):
-                        chiScore[t][0] = chiTable[c][t]
+                    if (chiScore[t][0] < chiTable[yy[c]][t]):
+                        chiScore[t][0] = chiTable[yy[c]][t]
 
         #sort for chi-score, and make blackList
         chiScore = sorted(chiScore, key = lambda chiType:chiType[0], reverse = True)

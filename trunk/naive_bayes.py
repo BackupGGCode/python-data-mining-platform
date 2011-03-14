@@ -37,7 +37,7 @@ class NaiveBayes:
         yy = set(y)
         yy = list(yy)
         yy.sort()
-        self.cPrior = [0 for i in range(len(yy))]
+        self.cPrior = [0 for i in range(yy[len(yy) - 1] + 1)]
 
         #2. fill cPrior
         for i in y:
@@ -56,7 +56,8 @@ class NaiveBayes:
         #normalize vTable
         for i in range(x.nCol):
             for j in range(len(self.cPrior)):
-                self.vTable[i][j] /= float(self.cPrior[j])
+                if (self.cPrior[j] > 1e-10):
+                    self.vTable[i][j] /= float(self.cPrior[j])
         
         #normalize cPrior
         for i in range(len(self.cPrior)):
@@ -142,7 +143,10 @@ class NaiveBayes:
             #calculate best p
             for target in range(len(self.cPrior)):
                 curP = 0
-                curP += math.log(self.cPrior[target])
+                if (self.cPrior[target] > 1e-8):
+                    curP += math.log(self.cPrior[target])
+                else:
+                    curP += math.log(1e-8)
                 
                 #debug
                 if (self.logPath <> ""):

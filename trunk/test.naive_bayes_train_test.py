@@ -10,14 +10,14 @@ if __name__ == "__main__":
     config = Configuration.FromFile("conf/test.xml")
     PyMining.Init(config, "__global__")
     matCreater = ClassifierMatrix(config, "__matrix__")
-    [trainx, trainy] = matCreater.CreateTrainMatrix("data/train.txt")
+    [trainx, trainy] = matCreater.CreateTrainMatrix("data/sogou.train.txt")
     chiFilter = ChiSquareFilter(config, "__filter__")
     chiFilter.TrainFilter(trainx, trainy)
 
     nbModel = NaiveBayes(config, "naive_bayes")
     nbModel.Train(trainx, trainy)
 
-    [testx, testy] = matCreater.CreatePredictMatrix("data/test.txt")
+    [testx, testy] = matCreater.CreatePredictMatrix("data/sogou.test.txt")
     [testx, testy] = chiFilter.MatrixFilter(testx, testy)
     [resultY, precision] = nbModel.Test(testx, testy)
     

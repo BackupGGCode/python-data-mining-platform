@@ -110,9 +110,6 @@ class TwcNaiveBayes:
             print "Error!, len of cols should == len of vals"
             return -1
 
-        #debug
-        print "new doc:"
-
         #get min likelihood
         #minL = sys.maxint
         retList = []
