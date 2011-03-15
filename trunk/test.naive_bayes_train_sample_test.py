@@ -19,7 +19,7 @@ if __name__ == "__main__":
     nbModel = NaiveBayes(config, "naive_bayes")
     nbModel.Train(trainx, trainy)
     
-    inputStr = "仅售59元！原价108元的花园巴西烤肉自助餐一人次任吃（蛇口店、购物公园店全时段通用），另赠送两张10元现金抵用券！邀请好友返利10元！"
+    inputStr = "仅售28元！原价698元的康迩福韩国美容美体中心的韩国特色美容套餐1份（紫莱花园店、时代奥城店2店通用）：韩国特色面部SPA护理1次+韩国特色面部瘦脸加毛孔净化1次+韩国特色水"
     [cols, vals] = matCreater.CreatePredictSample(inputStr)
     [cols, vals] = chiFilter.SampleFilter(cols, vals)
     probTuple = nbModel.TestSample(cols, vals)
