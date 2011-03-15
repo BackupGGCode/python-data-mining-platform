@@ -79,6 +79,7 @@ class TwcNaiveBayes:
                         termId = x.cols[c]
                         self.weights[classId][termId] += x.vals[c]
                         weightsSum[classId] += x.vals[c]
+
         #normalize weights
         classCount = len(self.yy)
         for classId in range(len(self.yy)):
@@ -87,7 +88,7 @@ class TwcNaiveBayes:
                 self.weights[classId][termId] += 1
                 self.weights[classId][termId] /= float(weightsSum[classId]) + classCount
                 self.weights[classId][termId] = math.log(self.weights[classId][termId])
-                curClassSum += self.weights[classId][termId]
+                curClassSum += math.fabs(self.weights[classId][termId])
             for termId in range(x.nCol):
                 self.weights[classId][termId] /= curClassSum
 
@@ -125,12 +126,7 @@ class TwcNaiveBayes:
                 curL += termFreq * self.weights[classIndex][termId]
 
             retList.append([self.yy[classIndex], curL]) 
-            sumProb += curL
 
-        for i in range(len(retList)):
-            retList[i][1] /= (sumProb + 1e-10)
-            retList[i] = tuple(retList[i])
-       
         return tuple(retList)
 
     """
@@ -156,10 +152,10 @@ class TwcNaiveBayes:
             ret = self.__GetBestTarget(x.cols[x.rows[r]:x.rows[r + 1]], x.vals[x.rows[r]:x.rows[r + 1]])
             retY.append(ret)
             if (y <> None):
-                bestL = -1
+                bestL = sys.maxint
                 bestTarget = 0
                 for tup in ret:
-                    if (tup[1] > bestL):
+                    if (tup[1] < bestL):
                         bestL = tup[1]
                         bestTarget = tup[0]
                 if (bestTarget == y[r]):
