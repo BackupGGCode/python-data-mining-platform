@@ -21,6 +21,9 @@ struct Vertex
     int lowlink;
     int index;
 
+    Edge* startEdge;
+    int edgeCount;
+
     Vertex(int _id): id(_id), lowlink(0), index(0) {}
 };
 
@@ -142,8 +145,51 @@ void OutputResult()
 
 bool CheckIsStrongConnected(Graph* graph)
 {
+    if (graph->count < vertice.size())
+    {
+        return false;
+    }
+
     //make a real adjacent graph
-    
+    for (int i = 0; i < vertice.size(); i++)
+    {
+        vertice[i]->startEdge = NULL;
+        vertice[i]->edgeCount = 0;
+        vertice[i]->lowlink = -1;
+        vertice[i]->index = -1;
+    }
+
+    //init cur edges
+    vector<Edge*> curEdges;
+    curEdges.reserve(graph->count);
+    for (size_t i = 0; i < graph->count; i++)
+    {
+        curEdges.push_back(edges[graph->arr[i]]);
+    }
+
+    //make an adjacent list graph
+    int vertexIdx = 0;
+    int edgeIdx = 0;
+    while (vertexIdx < vertice.size())
+    {
+        if (edgeIdx >= curEdges.size())
+        {
+            return false;
+        }
+        if (vertice[vertexIdx]->id != curEdges[edgeIdx]->v1)
+        {
+            //some vertex disappeared
+            return false;
+        }
+        vertice[vertexIdx]->startEdge = curEdges[edgeIdx];
+        while ((vertice[vertexIdx]->id == curEdges[edgeIdx]->v1) 
+              && (edgeIdx < curEdges.size()))
+        {
+            edgeIdx++;
+            vertice[vertexIdx]->edgeCount++;
+        }
+        vertexIdx++;
+    }
 }
 
 bool CheckOrAddConnected(Graph* graph, GraphInfo** retInfo)
