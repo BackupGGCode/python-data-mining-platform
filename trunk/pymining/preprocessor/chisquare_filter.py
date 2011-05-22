@@ -1,7 +1,7 @@
 from matrix import Matrix
 from classifier_matrix import ClassifierMatrix
 from segmenter import Segmenter
-from py_mining import PyMining
+from py_mining import GlobalInfo
 from configuration import Configuration
 
 class ChiSquareFilter:
@@ -70,7 +70,7 @@ class ChiSquareFilter:
                     curRowLen += 1
 
                     #debug
-                    #print PyMining.idToTerm[x.cols[c]].encode("utf-8")
+                    #print GlobalInfo.idToTerm[x.cols[c]].encode("utf-8")
 
             newRows.append(newRows[len(newRows) - 1] + curRowLen)
         return [Matrix(newRows, newCols, newVals), y]
@@ -130,9 +130,9 @@ class ChiSquareFilter:
                 #get a
                 a = aTable[yy[cc]][t]
                 #get b
-                b = PyMining.idToDocCount[t] - a
+                b = GlobalInfo.idToDocCount[t] - a
                 #get c
-                c = PyMining.classToDocCount[yy[cc]] - a
+                c = GlobalInfo.classToDocCount[yy[cc]] - a
                 #get d
                 d = n - a - b -c
                 #get X^2(t, c)
@@ -147,7 +147,7 @@ class ChiSquareFilter:
             #calculate prior prob of each c
             priorC = [0 for i in range(yy[len(yy) - 1] + 1)]
             for i in range(len(yy)):
-                priorC[yy[i]] = float(PyMining.classToDocCount[yy[i]]) / n
+                priorC[yy[i]] = float(GlobalInfo.classToDocCount[yy[i]]) / n
 
             #calculate score of each t
             for t in range(x.nCol):
@@ -184,7 +184,7 @@ class ChiSquareFilter:
             for i in range(len(chiScore)):
                 if (i == int(self.rate * len(chiScore))):
                     f.write("========unselected=======\n")
-                term = PyMining.idToTerm[chiScore[i][1]]
+                term = GlobalInfo.idToTerm[chiScore[i][1]]
                 score = chiScore[i][0]
                 f.write(term.encode("utf-8") + " " + str(score) + "\n")
             f.close()
@@ -195,7 +195,7 @@ class ChiSquareFilter:
 
 if __name__ == "__main__":
     config = Configuration.FromFile("conf/test.xml")
-    PyMining.Init(config, "__global__")
+    GlobalInfo.Init(config, "__global__")
     matCreater = ClassifierMatrix(config, "__matrix__")
     [trainx, trainy] = matCreater.CreateTrainMatrix("data/tuangou_titles3.txt")
     chiFilter = ChiSquareFilter(config, "__filter__")

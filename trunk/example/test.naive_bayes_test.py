@@ -1,10 +1,13 @@
-from matrix import Matrix
-from classifier_matrix import ClassifierMatrix
-from segmenter import Segmenter
-from py_mining import PyMining
-from configuration import Configuration
-from chisquare_filter import ChiSquareFilter
-from naive_bayes import NaiveBayes
+import sys, os
+sys.path.append(os.path.join(os.getcwd(), '../'))
+
+from pymining.math.matrix import Matrix
+from pymining.math.classifier_matrix import ClassifierMatrix
+from pymining.nlp.segmenter import Segmenter
+from pymining.common.py_mining import PyMining
+from pymining.common.configuration import Configuration
+from pymining.preprocessor.chisquare_filter import ChiSquareFilter
+from pymining.classifier.naive_bayes import NaiveBayes
 
 if __name__ == "__main__":
     config = Configuration.FromFile("conf/test.xml")

@@ -1,19 +1,19 @@
 import math
-from segmenter import Segmenter
-from matrix import Matrix
-from py_mining import PyMining
-from configuration import Configuration
+from ..nlp.segmenter import Segmenter
+from ..nlp.matrix import Matrix
+from ..common.py_mining import GlobalInfo
+from ..common.configuration import Configuration
 
-class ClassifierMatrix:
+class Text2Matrix:
     def __init__(self, config, nodeName, loadFromFile = False):
         self.node = config.GetChild(nodeName)
         self.segmenter = Segmenter(config, "__segmenter__")
         self.trained = loadFromFile
-        PyMining.Init(config, "__global__", loadFromFile)
+        GlobalInfo.Init(config, "__global__", loadFromFile)
         
     """
     create train matrix:
-        fill dict in PyMining, record:
+        fill dict in GlobalInfo, record:
         1)termToId
         2)idToTerm
         3)termToDocCount
@@ -50,11 +50,11 @@ class ClassifierMatrix:
             termFres = {}
             for word in wordList:
                 curWordCount += 1
-                if (not PyMining.termToId.has_key(word)):
-                    PyMining.termToId[word] = uid
-                    PyMining.idToTerm[uid] = word
+                if (not GlobalInfo.termToId.has_key(word)):
+                    GlobalInfo.termToId[word] = uid
+                    GlobalInfo.idToTerm[uid] = word
                     uid += 1
-                termId = PyMining.termToId[word]
+                termId = GlobalInfo.termToId[word]
                 partCols.append(termId)
                 if (not termFres.has_key(termId)):
                     termFres[termId] = 1
@@ -71,24 +71,24 @@ class ClassifierMatrix:
                 #fill vals with termFrequent
                 vals.append(termFres[col])
                 #fill idToDocCount
-                if (not PyMining.idToDocCount.has_key(col)):
-                    PyMining.idToDocCount[col] = 1
+                if (not GlobalInfo.idToDocCount.has_key(col)):
+                    GlobalInfo.idToDocCount[col] = 1
                 else:
-                    PyMining.idToDocCount[col] += 1
+                    GlobalInfo.idToDocCount[col] += 1
 
             #fill rows
             rows.append(rows[len(rows) - 1] + \
                 len(partCols))
 
             #fill classToDocCount
-            if (not PyMining.classToDocCount.has_key(target)):
-                PyMining.classToDocCount[target] = 1
+            if (not GlobalInfo.classToDocCount.has_key(target)):
+                GlobalInfo.classToDocCount[target] = 1
             else:
-                PyMining.classToDocCount[target] += 1
+                GlobalInfo.classToDocCount[target] += 1
 
-        #fill PyMining's idToIdf
-        for termId in PyMining.idToTerm.keys():
-            PyMining.idToIdf[termId] = math.log(float(len(rows) - 1) / (PyMining.idToDocCount[termId] + 1))
+        #fill GlobalInfo's idToIdf
+        for termId in GlobalInfo.idToTerm.keys():
+            GlobalInfo.idToIdf[termId] = math.log(float(len(rows) - 1) / (GlobalInfo.idToDocCount[termId] + 1))
 
         #NOTE: now, not mul idf to vals, because not all algorithms need tf * idf
         #change matrix's vals using tf-idf represent
@@ -96,13 +96,13 @@ class ClassifierMatrix:
         #    for c in range(rows[r], rows[r + 1]):
         #        termId = cols[c]
         #        #idf(i) = log(|D| / |{d (ti included)}| + 1
-        #        vals[c] = vals[c] * PyMining.idToIdf[termId]
+        #        vals[c] = vals[c] * GlobalInfo.idToIdf[termId]
 
         #close file
         f.close()
 
         #write dicts out
-        PyMining.Write()
+        GlobalInfo.Write()
 
         self.trained = True
 
@@ -123,8 +123,8 @@ class ClassifierMatrix:
         partCols = []
         termFreqs = {}
         for word in wordList:
-            if (PyMining.termToId.has_key(word)):
-                termId = PyMining.termToId[word]
+            if (GlobalInfo.termToId.has_key(word)):
+                termId = GlobalInfo.termToId[word]
                 partCols.append(termId)
                 if (not termFreqs.has_key(termId)):
                     termFreqs[termId] = 1
@@ -171,8 +171,8 @@ class ClassifierMatrix:
             curWordCount = 0
             for word in wordList:
                 curWordCount += 1
-                if (PyMining.termToId.has_key(word)):
-                    termId = PyMining.termToId[word]
+                if (GlobalInfo.termToId.has_key(word)):
+                    termId = GlobalInfo.termToId[word]
                     partCols.append(termId)
                     if (not termFreqs.has_key(termId)):
                         termFreqs[termId] = 1

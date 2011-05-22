@@ -1,11 +1,11 @@
 import math
 import pickle
 
-from matrix import Matrix
-from classifier_matrix import ClassifierMatrix
-from segmenter import Segmenter
-from py_mining import PyMining
-from configuration import Configuration 
+from ..math.matrix import Matrix
+from ..math.classifier_matrix import ClassifierMatrix
+from ..nlp.segmenter import Segmenter
+from ..common.py_mining import GlobalInfo
+from ..common.configuration import Configuration 
 
 class NaiveBayes:
     def __init__(self, config, nodeName, loadFromFile = False):
@@ -96,7 +96,7 @@ class NaiveBayes:
                     curP += math.log(self.vTable[cols[c]][target])
                 #debug
                 #if (self.logPath <> ""):
-                #    term = PyMining.idToTerm[cols[c]]
+                #    term = GlobalInfo.idToTerm[cols[c]]
                 #    prob = math.log(self.vTable[cols[c]][target] + 1e-7) 
                 #    f.write(term.encode("utf-8") + ":" + str(cols[c]) + ":" + str(prob) + "\n")
             
@@ -160,7 +160,7 @@ class NaiveBayes:
 
                     #debug
                     if (self.logPath <> ""):
-                        term = PyMining.idToTerm[x.cols[c]]
+                        term = GlobalInfo.idToTerm[x.cols[c]]
                         prob = math.log(self.vTable[x.cols[c]][target] + 1e-7) 
                         f.write(term.encode("utf-8") + ":" + str(x.cols[c]) + ":" + str(prob) + "\n")
 
@@ -190,7 +190,7 @@ class NaiveBayes:
 
 if __name__ == "__main__":
     config = Configuration.FromFile("conf/test.xml")
-    PyMining.Init(config, "__global__")
+    GlobalInfo.Init(config, "__global__")
     matCreater = ClassifierMatrix(config, "__matrix__")
     [trainx, trainy] = matCreater.CreateTrainMatrix("data/train.txt")
 
