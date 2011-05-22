@@ -119,7 +119,7 @@ def Predict(line, model, srcDict, tarDict):
 
 if __name__ == "__main__":
     srcDict = LoadDict("dict/baidu_dict.txt")
-    [model, tarDict] = Train("data/tuangou_titles_with_tag.txt", 100, 0.05, srcDict)
+    [model, tarDict] = Train("data/tuangou_titles_with_tag.txt", 1, 0.95, srcDict)
    
     print "after train"
 
