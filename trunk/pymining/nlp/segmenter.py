@@ -1,7 +1,7 @@
 #coding=utf8=
 #mmseg
 
-from configuration import Configuration
+from ..common.configuration import Configuration
 
 class Segmenter:
     def __init__(self, config, nodeName):

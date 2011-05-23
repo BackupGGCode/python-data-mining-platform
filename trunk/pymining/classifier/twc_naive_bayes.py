@@ -2,11 +2,11 @@ import math
 import pickle
 import sys
 
-from matrix import Matrix
-from classifier_matrix import ClassifierMatrix
-from segmenter import Segmenter
-from py_mining import PyMining
-from configuration import Configuration 
+from ..math.matrix import Matrix
+from ..math.text2matrix import Text2Matrix
+from ..nlp.segmenter import Segmenter
+from ..common.global_info import GlobalInfo
+from ..common.configuration import Configuration 
 
 class TwcNaiveBayes:
     def __init__(self, config, nodeName, loadFromFile = False):
@@ -42,7 +42,7 @@ class TwcNaiveBayes:
             for c in range(x.rows[r], x.rows[r + 1]):
                 termId = x.cols[c]
                 x.vals[c] = math.log(x.vals[c] + 1)
-                x.vals[c] = x.vals[c] * PyMining.idToIdf[termId]
+                x.vals[c] = x.vals[c] * GlobalInfo.idToIdf[termId]
                 sampleSum += x.vals[c] * x.vals[c]
 
             #normalize it

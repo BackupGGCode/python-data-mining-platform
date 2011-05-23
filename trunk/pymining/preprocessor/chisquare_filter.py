@@ -1,8 +1,8 @@
-from matrix import Matrix
-from classifier_matrix import ClassifierMatrix
-from segmenter import Segmenter
-from py_mining import GlobalInfo
-from configuration import Configuration
+from ..math.matrix import Matrix
+from ..math.text2matrix import Text2Matrix
+from ..nlp.segmenter import Segmenter
+from ..common.global_info import GlobalInfo
+from ..common.configuration import Configuration
 
 class ChiSquareFilter:
     def __init__(self, config, nodeName, loadFromFile = False):
@@ -196,7 +196,7 @@ class ChiSquareFilter:
 if __name__ == "__main__":
     config = Configuration.FromFile("conf/test.xml")
     GlobalInfo.Init(config, "__global__")
-    matCreater = ClassifierMatrix(config, "__matrix__")
-    [trainx, trainy] = matCreater.CreateTrainMatrix("data/tuangou_titles3.txt")
+    txt2mat = Text2Matrix(config, "__matrix__")
+    [trainx, trainy] = txt2mat.CreateTrainMatrix("data/tuangou_titles3.txt")
     chiFilter = ChiSquareFilter(config, "__filter__")
     chiFilter.TrainFilter(trainx, trainy) 

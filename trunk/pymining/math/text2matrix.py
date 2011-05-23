@@ -1,7 +1,7 @@
 import math
 from ..nlp.segmenter import Segmenter
-from ..nlp.matrix import Matrix
-from ..common.py_mining import GlobalInfo
+from ..math.matrix import Matrix
+from ..common.global_info import GlobalInfo
 from ..common.configuration import Configuration
 
 class Text2Matrix:
@@ -194,9 +194,9 @@ class Text2Matrix:
 
 if __name__ == "__main__":
     config = Configuration.FromFile("conf/test.xml")
-    matCreater = ClassifierMatrix(config, "__matrix__")
-    [trainMat, ty] = matCreater.CreateTrainMatrix("data/tuangou_titles3.txt")
-    [predictMat, py] = matCreater.CreatePredictMatrix("data/tuangou_titles3.txt")
+    txt2mat = Text2Matrix(config, "__matrix__")
+    [trainMat, ty] = txt2mat.CreateTrainMatrix("data/tuangou_titles3.txt")
+    [predictMat, py] = txt2mat.CreatePredictMatrix("data/tuangou_titles3.txt")
     print py
     print predictMat.rows
     print predictMat.cols

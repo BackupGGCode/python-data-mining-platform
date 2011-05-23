@@ -2,22 +2,25 @@ import sys, os
 sys.path.append(os.path.join(os.getcwd(), '../'))
 
 from pymining.math.matrix import Matrix
-from pymining.math.classifier_matrix import ClassifierMatrix
+from pymining.math.text2matrix import Text2Matrix
 from pymining.nlp.segmenter import Segmenter
-from pymining.common.py_mining import PyMining
+from pymining.common.global_info import GlobalInfo
 from pymining.common.configuration import Configuration
 from pymining.preprocessor.chisquare_filter import ChiSquareFilter
 from pymining.classifier.naive_bayes import NaiveBayes
 
 if __name__ == "__main__":
     config = Configuration.FromFile("conf/test.xml")
-    PyMining.Init(config, "__global__", True)
-    matCreater = ClassifierMatrix(config, "__matrix__", True)
-    chiFilter = ChiSquareFilter(config, "__filter__", True)
+    GlobalInfo.Init(config, "__global__")
+    txt2mat = Text2Matrix(config, "__matrix__")
+    [trainx, trainy] = txt2mat.CreateTrainMatrix("data/train.txt")
+    chiFilter = ChiSquareFilter(config, "__filter__")
+    chiFilter.TrainFilter(trainx, trainy)
 
-    nbModel = NaiveBayes(config, "naive_bayes", True)
+    nbModel = NaiveBayes(config, "naive_bayes")
+    nbModel.Train(trainx, trainy)
 
-    [testx, testy] = matCreater.CreatePredictMatrix("data/test.txt")
+    [testx, testy] = txt2mat.CreatePredictMatrix("data/test.txt")
     [testx, testy] = chiFilter.MatrixFilter(testx, testy)
     [resultY, precision] = nbModel.Test(testx, testy)
     

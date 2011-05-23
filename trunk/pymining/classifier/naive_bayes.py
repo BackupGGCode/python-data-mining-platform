@@ -2,9 +2,9 @@ import math
 import pickle
 
 from ..math.matrix import Matrix
-from ..math.classifier_matrix import ClassifierMatrix
+from ..math.text2matrix import Text2Matrix
 from ..nlp.segmenter import Segmenter
-from ..common.py_mining import GlobalInfo
+from ..common.global_info import GlobalInfo
 from ..common.configuration import Configuration 
 
 class NaiveBayes:
@@ -191,13 +191,13 @@ class NaiveBayes:
 if __name__ == "__main__":
     config = Configuration.FromFile("conf/test.xml")
     GlobalInfo.Init(config, "__global__")
-    matCreater = ClassifierMatrix(config, "__matrix__")
-    [trainx, trainy] = matCreater.CreateTrainMatrix("data/train.txt")
+    tex2mat = Text2Matrix(config, "__matrix__")
+    [trainx, trainy] = tex2mat.CreateTrainMatrix("data/train.txt")
 
     nbModel = NaiveBayes(config, "naive_bayes")
     nbModel.Train(trainx, trainy)
 
-    [testx, testy] = matCreater.CreatePredictMatrix("data/test.txt")
+    [testx, testy] = tex2mat.CreatePredictMatrix("data/test.txt")
     [resultY, precision] = nbModel.Test(testx, testy)
     
     """
