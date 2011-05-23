@@ -187,24 +187,3 @@ class NaiveBayes:
             f.close()
         
         return [retY, float(correct) / len(retY)]
-
-if __name__ == "__main__":
-    config = Configuration.FromFile("conf/test.xml")
-    GlobalInfo.Init(config, "__global__")
-    tex2mat = Text2Matrix(config, "__matrix__")
-    [trainx, trainy] = tex2mat.CreateTrainMatrix("data/train.txt")
-
-    nbModel = NaiveBayes(config, "naive_bayes")
-    nbModel.Train(trainx, trainy)
-
-    [testx, testy] = tex2mat.CreatePredictMatrix("data/test.txt")
-    [resultY, precision] = nbModel.Test(testx, testy)
-    
-    """
-    print "testX, rows, cols ,vals"
-    print testX.rows
-    print testY
-    print testX.cols
-    """
-
-    print precision

@@ -1,8 +1,7 @@
+#encoding=utf8
 """
 this is a example shows train model using a corpus, and test a sample in str
 """
-
-#encoding=utf8
 import sys, os
 sys.path.append(os.path.join(os.getcwd(), '../'))
 

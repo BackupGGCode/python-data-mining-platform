@@ -3,11 +3,11 @@ import random
 import pickle
 import sys
 
-from matrix import Matrix
-from classifier_matrix import ClassifierMatrix
-from segmenter import Segmenter
-from py_mining import PyMining
-from configuration import Configuration 
+from ..math.matrix import Matrix
+from ..math.text2matrix import Text2Matrix
+from ..nlp.segmenter import Segmenter
+from ..common.global_info import GlobalInfo
+from ..common.configuration import Configuration 
 
 class Kmeans:
     """
@@ -42,7 +42,7 @@ class Kmeans:
             for c in range(x.rows[r], x.rows[r + 1]):
                 termId = x.cols[c]
                 x.vals[c] = math.log(x.vals[c] + 1)
-                x.vals[c] = x.vals[c] * PyMining.idToIdf[termId]
+                x.vals[c] = x.vals[c] * GlobalInfo.idToIdf[termId]
                 sampleSum += x.vals[c] * x.vals[c]
 
             #normalize it
@@ -135,14 +135,3 @@ class Kmeans:
         #print "cost:",cost
 
         return math.sqrt(cost + 1e-8)
-            
-if __name__ == "__main__":
-    config = Configuration.FromFile("conf/test.xml")
-    PyMining.Init(config, "__global__")
-    matCreater = ClassifierMatrix(config, "__matrix__")
-
-    [x, y] = matCreater.CreateTrainMatrix("data/sogou.data.reduced")
-
-    kmeans = Kmeans()
-    clusteringOut = kmeans.Cluster(x, 10)
-    #print clusteringOut
