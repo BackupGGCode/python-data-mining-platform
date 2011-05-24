@@ -23,16 +23,20 @@ def TrippleCmp(t1, t2):
 
 class Matrix:
     #init a matrix, using csr, and dimensions
-    def __init__(self, rows, cols, vals):
+    def __init__(self, rows, cols, vals, nRow = -1, nCol = -1):
         self.rows = rows
         self.cols = cols
         self.vals = vals
-        self.nRow = len(rows) - 1
-        maxCol = -1
-        for col in cols:
-            if (col > maxCol):
-                maxCol = col
-        self.nCol = maxCol + 1
+        if (nRow == -1) and (nCol == -1):
+            self.nRow = len(rows) - 1
+            maxCol = -1
+            for col in cols:
+                if (col > maxCol):
+                    maxCol = col
+            self.nCol = maxCol + 1
+        else:
+            self.nRow = nRow
+            self.nCol = nCol
 
     #get element @(x,y), if no element, return 0, if range error, return -1
     def Get(self, x, y):
@@ -109,7 +113,6 @@ class Matrix:
         return [newMat.Transpose(mat.nCol), baggingDict]
 
 #if __name__ == "__main__":
-
     #rows = [0, 3, 4, 5, 6]
     #cols = [0, 1, 2, 3, 4, 4]
     #vals = [1, 1, 1, 1, 1, 1]

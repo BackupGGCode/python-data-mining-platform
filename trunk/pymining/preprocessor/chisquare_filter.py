@@ -193,6 +193,7 @@ class ChiSquareFilter:
 
         return True
 
+"""
 if __name__ == "__main__":
     config = Configuration.FromFile("conf/test.xml")
     GlobalInfo.Init(config, "__global__")
@@ -200,3 +201,4 @@ if __name__ == "__main__":
     [trainx, trainy] = txt2mat.CreateTrainMatrix("data/tuangou_titles3.txt")
     chiFilter = ChiSquareFilter(config, "__filter__")
     chiFilter.TrainFilter(trainx, trainy) 
+"""

@@ -39,6 +39,7 @@ class Segmenter:
         f.close()
         return dicts
 
+"""
 if __name__ == "__main__":
     cfg = Configuration.FromFile("conf/test.xml")
     segmenter = Segmenter(cfg, "segmenter")
@@ -47,3 +48,4 @@ if __name__ == "__main__":
         wordList = segmenter.Split(line.decode("utf-8"))
         for word in wordList:
             print word.encode("utf-8")
+"""
