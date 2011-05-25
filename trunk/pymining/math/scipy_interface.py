@@ -1,5 +1,6 @@
 from scipy.sparse import *
 from scipy import *
+import numpy
 from matrix import Matrix
 
 """
@@ -36,5 +37,5 @@ class ScipyInterface:
     """
     @staticmethod
     def MatrixToCsr(mat):
-        return csr_matrix((array(mat.vals), array(mat.cols), array(mat.rows))\
+        return csr_matrix((array(mat.vals, numpy.float64), array(mat.cols), array(mat.rows))\
             , shape = (mat.nRow, mat.nCol))
