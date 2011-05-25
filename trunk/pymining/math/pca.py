@@ -7,6 +7,13 @@ from matrix import *
 from scipy_interface import *
 
 class Pca:
+    def __init__(self):
+        self.isTrained = False
+        self.haveColSpace = False
+        self.haveRowSpace = False
+        self.colSpaceTrans = None
+        self.rowSpaceTrans = None
+
     """
     this function get principal component of a given matrix
     @x is the input matrix
@@ -14,15 +21,17 @@ class Pca:
     @rowSpace = True, is get U*S
     @colSpace = True, is get S*V'
     @return:
-        if rowSpace = True and colSpace = True, return (U*S, S*V')
+        if rowSpace = True and colSpace = True, return (U*S, (S*V')')
         if rowSpace = True and colSpace = False, return U*S
-        if rowSpace = False and colSpace = True, return S*V'
+        if rowSpace = False and colSpace = True, return (S*V')'
     """
-    @staticmethod
-    def GetPrinComp(x, k, colSpace = True, rowSpace = False):
+    def TrainPrinComp(self, x, k, colSpace = True, rowSpace = False):
         if (not colSpace) and (not rowSpace):
             print "colSpace and rowSpace both == False, what you want to do?"
             raise
+
+        self.haveColSpace = colSpace
+        self.haveRowSpace = rowSpace
 
         #do incompelate svd
         csrMat = ScipyInterface.MatrixToCsr(x)
@@ -31,11 +40,31 @@ class Pca:
         (u,s,vt) = scipy.sparse.linalg.svds(csrMat, k)
         s = numpy.diag(s)
 
-        if (colSpace and rowSpace):
-            return (numpy.dot(u, s), numpy.dot(s, vt).transpose())
-
         if (colSpace):
-            return numpy.dot(s, vt).transpose()
-        
+            self.colSpaceTrans = numpy.dot(s, vt).transpose()
         elif (rowSpace):
-            return numpy.dot(u,s) 
+            self.rowSpaceTrans = numpy.dot(u,s)
+
+        self.isTrained = True
+
+    """
+    using trained col/row space tranform to do transform
+    @spaceParam in {"row", "col"}
+    @return
+    if spaceParam == "row", return U*S * sourceMat
+    if spaceParam == "col", return sourceMat * (S*V')'
+    """
+    def GetPrinComp(self, sourceMat, spaceParam):
+        if not self.isTrained:
+            print "using pca before train it!"
+            raise
+
+        if (spaceParam <> "row") and (spaceParam <> "col"):
+            print "spaceParam shoud in {\"row\", \"col\"}"
+            raise
+        if (spaceParam == "row"):
+            return numpy.dot(self.rowSpaceTrans, \
+                ScipyInterface.MatrixToCsr(sourceMat).todense())
+        else:
+            return numpy.dot(ScipyInterface.MatrixToCsr(sourceMat).todense(), \
+                self.colSpaceTrans)
