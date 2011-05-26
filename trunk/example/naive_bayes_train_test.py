@@ -16,6 +16,7 @@ if __name__ == "__main__":
     [trainx, trainy] = txt2mat.CreateTrainMatrix("data/train.txt")
     chiFilter = ChiSquareFilter(config, "__filter__")
     chiFilter.TrainFilter(trainx, trainy)
+    [trainx, trainy] = chiFilter.MatrixFilter(trainx, trainy)
 
     nbModel = NaiveBayes(config, "naive_bayes")
     nbModel.Train(trainx, trainy)

@@ -15,7 +15,7 @@
     </__global__>
 
     <__filter__>
-        <rate>0.8</rate>
+        <rate>0.9</rate>
         <method>max</method>
         <log_path>mining/filter.log</log_path>
         <model_path>mining/filter.model</model_path>
