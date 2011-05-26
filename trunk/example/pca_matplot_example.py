@@ -2,7 +2,7 @@ import sys, os
 sys.path.append(os.path.join(os.getcwd(), '../'))
 
 import matplotlib
-import numpy as np
+import numpy
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 import matplotlib.cbook as cbook
@@ -36,8 +36,14 @@ if __name__ == "__main__":
         else:
             colors.append(0.8)
 
+    print prinCompX[0:3,0]
+    x = prinCompX[0:3,0].reshape(3,).reshape(3)
+    print x.shape
+    print x
+
     #draw picture
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.scatter(delta1[:0], delta1[:1], c=colors, alpha=0.75)
+    ax.scatter(numpy.float64(prinCompX[0:1,0]), numpy.float64(prinCompX[0:1,1]))#, c=colors, alpha=0.75)
     plt.show()
+    plt.savefig("1.png")
