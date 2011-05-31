@@ -32,6 +32,13 @@ class ScipyInterface:
        return Matrix(rows, cols, vals, csrSource.shape[0], csrSource.shape[1])
 
     """
+    convert a sparse matrix to dense matrix in numpy
+    """
+    @staticmethod
+    def CsrToDense(src):
+        return ScipyInterface.MatrixToCsr(src).toarray()
+
+    """
     convert pymining-Matrix to scipy.sparse.csr_matrix
     @return scipy.sparse.csr_matrix
     """
