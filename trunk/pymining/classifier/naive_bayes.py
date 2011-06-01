@@ -149,8 +149,8 @@ class NaiveBayes:
                     curP += math.log(1e-8)
                 
                 #debug
-                if (self.logPath <> ""):
-                    f.write("<target> : " + str(target) + "\n")
+                #if (self.logPath <> ""):
+                #    f.write("<target> : " + str(target) + "\n")
 
                 for c in range(x.rows[r], x.rows[r + 1]):
                     if (self.vTable[x.cols[c]][target] == 0):
@@ -159,18 +159,18 @@ class NaiveBayes:
                         curP += math.log(self.vTable[x.cols[c]][target])
 
                     #debug
-                    if (self.logPath <> ""):
-                        term = GlobalInfo.idToTerm[x.cols[c]]
-                        prob = math.log(self.vTable[x.cols[c]][target] + 1e-7) 
-                        f.write(term.encode("utf-8") + ":" + str(x.cols[c]) + ":" + str(prob) + "\n")
+                    #if (self.logPath <> ""):
+                    #    term = GlobalInfo.idToTerm[x.cols[c]]
+                    #    prob = math.log(self.vTable[x.cols[c]][target] + 1e-7) 
+                    #    f.write(term.encode("utf-8") + ":" + str(x.cols[c]) + ":" + str(prob) + "\n")
 
                 if (curP > maxP):
                     bestY = target
                     maxP = curP
 
                 #debug
-                if (self.logPath <> ""):
-                    f.write("curP:" + str(curP) + "\n")
+                #if (self.logPath <> ""):
+                #    f.write("curP:" + str(curP) + "\n")
 
             if (bestY < 0):
                 print "best y < 0, error!"

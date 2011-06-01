@@ -14,6 +14,8 @@ from ..common.configuration import Configuration
 
 class Lda:
     def __init__(self, config, nodeName, loadFromFile = False):
+        self.sourceDim = 0
+        self.w = None
         if (loadFromFile):
             #add code
             pass
@@ -31,9 +33,11 @@ class Lda:
         if (k <= 0) or (k > x.nCol):
             print "k MUST > 0 and < x.nCol"
             raise
+        self.sourceDim = x.nCol
 
         #calculate m1, m2
         denseMat = ScipyInterface.CsrToDense(x)
+        print "denseMat_shape:", denseMat.shape
         m1 = numpy.zeros(denseMat.shape[1])
         m2 = numpy.zeros(denseMat.shape[1])
         for i in range(denseMat.shape[0]):
@@ -55,11 +59,10 @@ class Lda:
         sw = s1 + s2
         
         #calculate w
-        scipy.linalg.inv(sw, True)
-        w = numpy.dot(sw, m1 - m2)
-
-        print w
-        print w.shape
+        sw = scipy.linalg.pinv(sw)
+        self.w = numpy.dot(sw, m1 - m2)
+        self.w = self.w[0:k]
+        self.w = self.w / scipy.linalg.norm(self.w)
 
     def Test(self, x, y):
         #add code

@@ -10,6 +10,8 @@ class GlobalInfo:
     classToDocCount = {}
     #inverse document frequent of termId
     idToIdf = {}
+    #transfered id to termId
+    newIdToId = {}
 
     #filename of above
     nameTermToId = ""
@@ -17,6 +19,7 @@ class GlobalInfo:
     nameIdToDocCount = ""
     nameClassToDocCount = ""
     nameIdToIdf = ""
+    nameNewIdToId = ""
 
     #isInit
     isInit = False
@@ -38,6 +41,7 @@ class GlobalInfo:
         GlobalInfo.nameIdToDocCount = GlobalInfo.curNode.GetChild("id_to_doc_count").GetValue()
         GlobalInfo.nameClassToDocCount = GlobalInfo.curNode.GetChild("class_to_doc_count").GetValue()
         GlobalInfo.nameIdToIdf = GlobalInfo.curNode.GetChild("id_to_idf").GetValue()
+        GlobalInfo.nameNewIdToId = GlobalInfo.curNode.GetChild("newid_to_id").GetValue()
 
         if (loadFromFile):
             GlobalInfo.__ReadDict(GlobalInfo.termToId, GlobalInfo.nameTermToId, "str", "int")
@@ -45,6 +49,7 @@ class GlobalInfo:
             GlobalInfo.__ReadDict(GlobalInfo.idToDocCount, GlobalInfo.nameIdToDocCount, "int", "int")
             GlobalInfo.__ReadDict(GlobalInfo.classToDocCount, GlobalInfo.nameClassToDocCount, "int", "int")
             GlobalInfo.__ReadDict(GlobalInfo.idToIdf, GlobalInfo.nameIdToIdf, "int", "float")
+            GlobalInfo.__ReadDict(GlobalInfo.newIdToId, GlobalInfo.nameNewIdToId, "int", "int")
         
         GlobalInfo.isInit = True
 
@@ -58,6 +63,7 @@ class GlobalInfo:
         GlobalInfo.__WriteDict(GlobalInfo.idToDocCount, GlobalInfo.nameIdToDocCount)
         GlobalInfo.__WriteDict(GlobalInfo.classToDocCount, GlobalInfo.nameClassToDocCount)
         GlobalInfo.__WriteDict(GlobalInfo.idToIdf, GlobalInfo.nameIdToIdf)
+        GlobalInfo.__WriteDict(GlobalInfo.newIdToId, GlobalInfo.nameNewIdToId)
         return True
         
     @staticmethod

@@ -33,15 +33,20 @@ class TwcNaiveBayes:
         """
         calculate d(i(term),j(doc))
         1. d(i,j) = log(d(i,j) + 1)
-        2. d(i,j) = d(i,j) * idf(i)
+        2. d(i,j) = d(i,j) * newIdf(i)
         3. d(i,j) = d(i,j) / sqrt(sigma(d(k,j)^2))
                             k belong current sample
         """
         for r in range(len(x.rows) - 1):
             sampleSum = 0.0
             for c in range(x.rows[r], x.rows[r + 1]):
-                termId = x.cols[c]
+                newId = x.cols[c]
                 x.vals[c] = math.log(x.vals[c] + 1)
+                termId = -1
+                if GlobalInfo.newIdToId.has_key(newId):
+                    termId = GlobalInfo.newIdToId[newId]
+                else:
+                    termId = newId
                 x.vals[c] = x.vals[c] * GlobalInfo.idToIdf[termId]
                 sampleSum += x.vals[c] * x.vals[c]
 
@@ -76,21 +81,21 @@ class TwcNaiveBayes:
             for r in range(len(x.rows) - 1):
                 for c in range(x.rows[r], x.rows[r + 1]):
                     if (y[r] <> self.yy[classId]):
-                        termId = x.cols[c]
-                        self.weights[classId][termId] += x.vals[c]
+                        newId = x.cols[c]
+                        self.weights[classId][newId] += x.vals[c]
                         weightsSum[classId] += x.vals[c]
 
         #normalize weights
         classCount = len(self.yy)
         for classId in range(len(self.yy)):
             curClassSum = 0
-            for termId in range(x.nCol):
-                self.weights[classId][termId] += 1
-                self.weights[classId][termId] /= float(weightsSum[classId]) + classCount
-                self.weights[classId][termId] = math.log(self.weights[classId][termId])
-                curClassSum += math.fabs(self.weights[classId][termId])
-            for termId in range(x.nCol):
-                self.weights[classId][termId] /= curClassSum
+            for newId in range(x.nCol):
+                self.weights[classId][newId] += 1
+                self.weights[classId][newId] /= float(weightsSum[classId]) + classCount
+                self.weights[classId][newId] = math.log(self.weights[classId][newId])
+                curClassSum += math.fabs(self.weights[classId][newId])
+            for newId in range(x.nCol):
+                self.weights[classId][newId] /= curClassSum
 
         self.trained = True
         #dump model
@@ -121,9 +126,9 @@ class TwcNaiveBayes:
         for classIndex in range(len(self.yy)):
             curL = 0
             for c in range(len(cols)):
-                termId = cols[c]
+                newId = cols[c]
                 termFreq = vals[c]
-                curL += termFreq * self.weights[classIndex][termId]
+                curL += termFreq * self.weights[classIndex][newId]
 
             retList.append([self.yy[classIndex], curL]) 
 
