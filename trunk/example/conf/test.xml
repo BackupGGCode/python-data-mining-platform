@@ -31,4 +31,17 @@
         <model_path>mining/naive_bayes.model</model_path>
         <log_path>mining/naive_bayes.log</log_path>
     </twc_naive_bayes>
+    
+    <smo_csvc>
+      <model_path>mining/smo_csvc.model</model_path>
+      <log_path>mining/smo_csvc.log</log_path>
+      <c>100</c>
+      <eps>0.001</eps>
+      <tolerance>0.000000000001</tolerance>
+      <times>50</times>
+      <kernel>
+        <name>RBF</name>
+        <parameters>10</parameters>
+      </kernel>
+    </smo_csvc>
 </config>
