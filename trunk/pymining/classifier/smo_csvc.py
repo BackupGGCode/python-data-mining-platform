@@ -138,31 +138,38 @@ class Svm_Util:
                 return float(numpy.dot(trainx[i].tolist()[0], trainy[j].tolist()[0]))
             
         except Exception as detail:
-            print 'dot product error,detail:', detail
+            print 'dot product error,detail:', detail,i,j,curlow,i2+p2-1,k,len(trainy.cols)
     
     @staticmethod
     def binary_search(collist,low,high,value):
         
         '''sorted list's binary search'''
-        
-        if value < collist[low] or value > collist[high]:
-            return -1
-        if value == collist[low]:
-            return low        
-        if value == collist[high]:
-            return high
-        
-        l = low
-        h = high
-        while(l<=h):            
-            mid = (l+h)/2
-            if collist[mid] > value:
-                h = mid - 1
-            elif collist[mid] < value:
-                l = mid + 1
-            else:
-                return mid
+        try:
+            if low < 0 or high < 0 or low > high or len(collist) <= high or len(collist) <= low:
+                return -1 
             
+            if value < collist[low] or value > collist[high]:
+                return -1
+            if value == collist[low]:
+                return low        
+            if value == collist[high]:
+                return high
+            
+            if low == 28217 or low == 28218 or high == 28218:
+                pass
+            l = low
+            h = high
+            while(l<=h):            
+                mid = (l+h)/2
+                if collist[mid] > value:
+                    h = mid - 1
+                elif collist[mid] < value:
+                    l = mid + 1
+                else:
+                    return mid
+        except Exception as detail:
+            print 'binary_search error detail is:', detail
+                    
         return -1
     
     @staticmethod 
@@ -229,17 +236,7 @@ class Svm_Util:
             return True
         else:
             return False 
-            
-    @staticmethod
-    def scale_data(sparam, trainx):
-        if sparam.isdense == True:
-            for i in range(0,trainx.shape[0]):
-                for j in range(0,trainx.shape[1]):
-                    trainx[i,j] = trainx[i,j]/(sqrt(trainx[i,j]*trainx[i,j]) + 10)
-        else:
-            for i in range(0,len(trainx.vals)):
-                trainx.vals[i] = trainx.vals[i]/(sqrt(trainx.vals[i]*trainx.vals[i]) + 10)
-    
+                
     @staticmethod
     def draw_scatter(xOffsets, yOffsets, xlabel = 'X', ylabel = 'Y', colors = None):   
         
@@ -250,7 +247,6 @@ class Svm_Util:
             return 
         
         fig = plt.figure()
-        plt.ylim(0,10)
         ax = fig.add_subplot(111)        
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)   
@@ -260,6 +256,7 @@ class Svm_Util:
         else:
             ax.scatter(xOffsets, yOffsets, c=colors, alpha=0.75) 
         plt.show()
+        plt.savefig('mining/scatter.png')
         
     @staticmethod
     def draw_plot(xOffsets, yOffsets, xl = 'X', yl = 'Y', title = 'figure'):  
@@ -271,13 +268,13 @@ class Svm_Util:
             return 
         
         fig = plt.figure()
-        plt.ylim(0,10)
         ax = fig.add_subplot(111)        
         plt.xlabel(xl)
         plt.ylabel(yl)  
-        ax.plot(xOffsets, yOffsets)
+        ax.plot(xOffsets, yOffsets,'b-')
         plt.title(title)        
         plt.show()
+        plt.savefig('mining/plot.png')
  
 class WeakRefKernelData():
     '''to wrap weak references data'''
