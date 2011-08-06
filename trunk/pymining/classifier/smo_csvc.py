@@ -248,11 +248,9 @@ class Svm_Util:
             return 
         
         fig = plt.figure()
-        ax = fig.add_subplot(111)        
+        ax = fig.add_subplot(111, autoscale_on=False, xlim=(0,1), ylim=(0,1)) 
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)  
-        plt.xlim(0,1)
-        plt.ylim(0,1) 
        
         if colors == None:
             ax.scatter(xOffsets, yOffsets)  
