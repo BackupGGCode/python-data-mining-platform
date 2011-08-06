@@ -13,6 +13,7 @@ from ..math.matrix import Matrix
 from ..math.text2matrix import Text2Matrix
 from ..nlp.segmenter import Segmenter
 from numpy import *
+from operator import itemgetter
 
 import time
 
@@ -249,7 +250,9 @@ class Svm_Util:
         fig = plt.figure()
         ax = fig.add_subplot(111)        
         plt.xlabel(xlabel)
-        plt.ylabel(ylabel)   
+        plt.ylabel(ylabel)  
+        plt.xlim(0,1)
+        plt.ylim(0,1) 
        
         if colors == None:
             ax.scatter(xOffsets, yOffsets)  
@@ -267,11 +270,11 @@ class Svm_Util:
             print 'xOffsets and yOffsets should be list type.'
             return 
         
-        fig = plt.figure()
-        ax = fig.add_subplot(111)        
+        fig = plt.figure()   
+        ax = fig.add_subplot(111, autoscale_on=False, xlim=(0,1), ylim=(0,1))
         plt.xlabel(xl)
-        plt.ylabel(yl)  
-        ax.plot(xOffsets, yOffsets,'b-')
+        plt.ylabel(yl) 
+        ax.plot(xOffsets, yOffsets, lw=3, color='purple')
         plt.title(title)        
         plt.show()
         plt.savefig('mining/plot.png')
@@ -461,6 +464,48 @@ class Smo_Csvc:
         w1 += alpha2newclipped * (y2 * (-y2*self.G[j]) + alpha2 * k22 + s * alpha1 * k12)
         w1 = w1 - k11 * alpha1new * alpha1new/2 - k22 * alpha2newclipped * alpha2newclipped/2 - s * k12 * alpha1new * alpha2newclipped
         return w1   
+    
+    def calculate_auc(self,output,label):
+        '''to calculate auc value.'''
+        
+        if output == None or label == None:
+            return 0.0
+        pos, neg = 0, 0         
+        for i in range(len(label)):
+            if label[i]>0:
+                pos+=1
+            else:    
+                neg+=1
+        output = sorted(output, key=itemgetter(0), reverse=True)
+      
+        tprlist = []
+        fprlist = []
+        tp, fp = 0., 0.            
+        for i in range(len(output)):
+            if output[i][1]>0:      
+                tp+=1
+            else:
+                fp+=1
+            tprlist.append(tp/pos)
+            fprlist.append(fp/neg)
+            print tp/pos,fp/neg
+    
+        auc = 0.            
+        prev_rectangular_right_vertex = 0
+        tpr_max = 0
+        fpr_max = 0
+        for i in range(0,len(fprlist)):
+            if tpr_max < tprlist[i]:
+                tpr_max = tprlist[i]
+                
+            if fpr_max < fprlist[i]:
+                fpr_max = fprlist[i]
+                
+            if fprlist[i] != prev_rectangular_right_vertex:
+                auc += (fprlist[i] - prev_rectangular_right_vertex) * tprlist[i]
+                prev_rectangular_right_vertex = fprlist[i]         
+        Svm_Util.draw_plot(fprlist, tprlist, 'FPR', 'TPR', 'ROC Curve(AUC = %.4f)' % auc)
+        return auc
              
     def Train(self,trainx,trainy): 
                
@@ -732,6 +777,8 @@ class Smo_Csvc:
         tprlist = []
         fprlist = []
         
+        outputlist = []
+        
         for i in range(len(testy)):
             if testy[i] == 1:
                 pn = pn + 1
@@ -774,6 +821,7 @@ class Smo_Csvc:
             tprlist.append(TPR)  
             fprlist.append(FPR)        
             
+            outputlist.append([fxi,testy[i]])
             print 'Actual output is', fxi, 'It\'s label is', testy[i]
         
         #to calculate auc
@@ -791,7 +839,6 @@ class Smo_Csvc:
             if fprlist[i] != prev_rectangular_right_vertex:
                 auc += (fprlist[i] - prev_rectangular_right_vertex) * tprlist[i]
                 prev_rectangular_right_vertex = fprlist[i] 
-        auc = auc/(tpr_max * fpr_max)
                 
         Recall = TP/(TP + FN)
         Precision = TP/(TP + FP)
@@ -801,5 +848,5 @@ class Smo_Csvc:
         AUCb = (Recall + TN/(FP + TN))/2
         
         print 'Recall = ', Recall, 'Precision = ', Precision,'Accuracy = ', Accuracy,'\n', 'F(beta=1) = ', Fbeta1, 'F(beta=2) = ', Fbeta2, 'AUCb = ',AUCb
-        
-        Svm_Util.draw_plot(fprlist, tprlist, 'FPR', 'TPR', 'ROC Curve(AUC = %.4f)' % auc)
+        self.calculate_auc(outputlist,testy)
+        return [Recall,Precision,Accuracy,Fbeta1,Fbeta2,AUCb,auc]
