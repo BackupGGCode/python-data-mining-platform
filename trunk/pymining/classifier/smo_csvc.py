@@ -486,7 +486,6 @@ class Smo_Csvc:
                 fp+=1
             tprlist.append(tp/pos)
             fprlist.append(fp/neg)
-            print tp/pos,fp/neg
     
         auc = 0.            
         prev_rectangular_right_vertex = 0
@@ -837,14 +836,20 @@ class Smo_Csvc:
             if fprlist[i] != prev_rectangular_right_vertex:
                 auc += (fprlist[i] - prev_rectangular_right_vertex) * tprlist[i]
                 prev_rectangular_right_vertex = fprlist[i] 
-                
-        Recall = TP/(TP + FN)
-        Precision = TP/(TP + FP)
-        Accuracy = (TP + TN)/(TP + TN + FP + FN)
-        Fbeta1 = 2 * (Recall * Precision)/(1 + Precision + Recall)
-        Fbeta2 = 5 * (Recall * Precision)/(4 + Precision + Recall)
-        AUCb = (Recall + TN/(FP + TN))/2
         
-        print 'Recall = ', Recall, 'Precision = ', Precision,'Accuracy = ', Accuracy,'\n', 'F(beta=1) = ', Fbeta1, 'F(beta=2) = ', Fbeta2, 'AUCb = ',AUCb
+        try:        
+            Recall = TP/(TP + FN)
+            Precision = TP/(TP + FP)
+            Accuracy = (TP + TN)/(TP + TN + FP + FN)
+            Fbeta1 = 2 * (Recall * Precision)/(1 + Precision + Recall)
+            Fbeta2 = 5 * (Recall * Precision)/(4 + Precision + Recall)
+            AUCb = (Recall + TN/(FP + TN))/2
+            
+            print 'Recall = ', Recall, 'Precision = ', Precision,'Accuracy = ', Accuracy,'\n', 'F(beta=1) = ', Fbeta1, 'F(beta=2) = ', Fbeta2, 'AUCb = ',AUCb
+            
+        except Exception as detail:
+            print 'to test error,detail is:', detail
+            
         self.calculate_auc(outputlist,testy)
+            
         return [Recall,Precision,Accuracy,Fbeta1,Fbeta2,AUCb,auc]
