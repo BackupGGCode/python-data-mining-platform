@@ -54,10 +54,51 @@ class Data_Format:
             for each in f:
                 count += 1                
                 each= each.split(separator2)             
-                y.append([int(each[0])])                
-        trainy = matrix(y)    
+                y.append(int(each[0]))                
+        trainy = y    
         return [trainx,trainy]    
-    
+   
+    @staticmethod
+    def data2libsparse_matrix(data_path,label_path,feature_number,separator1,separator2,separator3):
+        cur = 0
+        rows = []
+        cols = []
+        vals = []
+        y = []
+        count = 0
+        if data_path == label_path:
+            start = 1
+        else:
+            start = 0
+        f = open(data_path, 'r')
+        for each in f:
+            print 'to deal with sample ',count
+            count += 1            
+            each= each.split(separator1)
+            l = len(each) - 1
+            
+            if data_path == label_path:
+                y.append(int(each[0]))
+                
+            rows.append(cur)
+            for i in range(start, l):
+                    c = each[i].split(separator3)   
+                    cols.append(int(c[0]))
+                    vals.append(float(c[1]))
+                    cur += 1
+        rows.append(len(vals))   
+        trainx = Matrix(rows,cols,vals,len(rows)-1,feature_number) 
+        
+        if data_path != label_path:            
+            f = open(label_path, 'r')
+            count = 0
+            for each in f:
+                count += 1                
+                each= each.split(separator2)             
+                y.append(int(each[0]))                
+        trainy = y    
+        return [trainx,trainy] 
+     
     @staticmethod
     def data2dense_matrix(data_path,label_path,separator1,separator2):
         
@@ -79,17 +120,17 @@ class Data_Format:
             
             if data_path == label_path:
                 if int(each[0]) == 0:
-                    y.append([-1])
+                    y.append(-1)
                 else:
-                    y.append([int(each[0])])                    
+                    y.append(int(each[0]))                    
         trainx = matrix(x)
         
         if data_path != label_path:
             f = open(label_path, 'r')
             for each in f:
                 each= each.split(separator2) 
-                y.append([int(each[0])])            
-        trainy = matrix(y)
+                y.append(int(each[0]))            
+        trainy = y
         
         return [trainx,trainy]    
     
