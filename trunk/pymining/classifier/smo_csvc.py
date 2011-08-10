@@ -103,6 +103,32 @@ class Svm_Util:
                 sum = 0.0
                 
                 #to calculate dot product with O(nlgn)
+#                i1 = trainx.rows[i]
+#                i2 = trainy.rows[j]
+#                p1 = 0  #the elements number of row i
+#                p2 = 0  #the elements number of row j
+#                if i < len(trainx.rows)-1 :
+#                    p1 = trainx.rows[i+1] - trainx.rows[i]
+#                
+#                if j < len(trainy.rows)-1 :
+#                    p2 = trainy.rows[j+1] - trainy.rows[j]                   
+#                 
+#                if p2 <= p1:     
+#                    curlow = i1      
+#                    for k in range(i2, i2+p2):  
+#                        pos = Svm_Util.binary_search(trainx.cols,curlow,i1+p1-1,trainy.cols[k])
+#                        if  pos != -1:
+#                            sum += trainy.vals[k] * trainx.vals[pos]
+#                            curlow = pos + 1
+#                else: 
+#                    curlow = i2
+#                    for k in range(i1, i1+p1):                     
+#                        pos = Svm_Util.binary_search(trainx.cols,curlow,i2+p2-1,trainx.cols[k])
+#                        if  pos != -1:
+#                            sum += trainx.vals[k] * trainy.vals[pos]
+#                            curlow = pos + 1 
+                      
+                #to calculate dot product with O(nlgn)
                 i1 = trainx.rows[i]
                 i2 = trainy.rows[j]
                 p1 = 0  #the elements number of row i
@@ -113,20 +139,17 @@ class Svm_Util:
                 if j < len(trainy.rows)-1 :
                     p2 = trainy.rows[j+1] - trainy.rows[j]                   
                  
-                if p2 <= p1:     
-                    curlow = i1      
-                    for k in range(i2, i2+p2):  
-                        pos = Svm_Util.binary_search(trainx.cols,curlow,i1+p1-1,trainy.cols[k])
-                        if  pos != -1:
-                            sum += trainy.vals[k] * trainx.vals[pos]
-                            curlow = pos + 1
-                else: 
-                    curlow = i2
-                    for k in range(i1, i1+p1):                     
-                        pos = Svm_Util.binary_search(trainx.cols,curlow,i2+p2-1,trainx.cols[k])
-                        if  pos != -1:
-                            sum += trainx.vals[k] * trainy.vals[pos]
-                            curlow = pos + 1     
+                hash = {}  
+                
+                for k in range(i1, i1+p1): 
+                    key = trainx.cols[k]
+                    hash[key] = trainx.vals[k]                
+                  
+                for k in range(i2,i2+p2):
+                    key = trainy.cols[k]
+                    if hash.has_key(key):
+                        sum += float(hash[key]) *float(trainy.vals[k])               
+
                 return sum
                 
             else:
@@ -139,7 +162,7 @@ class Svm_Util:
                 return float(numpy.dot(trainx[i].tolist()[0], trainy[j].tolist()[0]))
             
         except Exception as detail:
-            print 'dot product error,detail:', detail,i,j,curlow,i2+p2-1,k,len(trainy.cols)
+            print 'dot product error,detail:', detail
     
     @staticmethod
     def binary_search(collist,low,high,value):
@@ -396,7 +419,7 @@ class Smo_Csvc:
             k = self.kcache[key2]
         else:
             k =  WeakRefKernelData(K(i1,i))
-            self.kcache[key1] = k
+            self.kcache[key1] = k            
         return k.kerneldata
          
     def SelectMaximumViolatingPair(self, trainy, K):
@@ -408,7 +431,7 @@ class Smo_Csvc:
         obj_min = float("Infinity")
         
         for t in range(0, len(trainy)):
-            if (trainy[t] == 1 and self.alpha[t] < self.model.config.C) or (trainy[t] == -1 and self.alpha[t] > 0):
+            if (trainy[t] == 1 and abs(self.alpha[t] - self.model.config.C) > 1e-005 ) or (trainy[t] == -1 and self.alpha[t] > 0):
                 if -trainy[t] * self.G[t] >= G_max:
                     i = t
                     G_max =  -trainy[t] * self.G[t] 
@@ -416,7 +439,7 @@ class Smo_Csvc:
         j = -1
         G_min = float("Infinity")
         for t in range(0, len(trainy)): 
-            if (trainy[t] == -1 and self.alpha[t] < self.model.config.C * self.npRatio) or (trainy[t] == 1 and self.alpha[t] > 0)  :
+            if (trainy[t] == -1 and abs(self.alpha[t] - self.model.config.C * self.npRatio) > 1e-005 ) or (trainy[t] == 1 and self.alpha[t] > 0)  :
                 b = G_max + trainy[t] * self.G[t]   
                      
                 if -trainy[t] * self.G[t] <= G_min:                     
@@ -516,7 +539,7 @@ class Smo_Csvc:
                 print "ERROR!, trainx.nRow should == len(y)"
                 return 0
         else:
-            if trainx.shape[0] != trainy.shape[0]:
+            if trainx.shape[0] != len(trainy):
                 print "ERROR!, trainx.shape[0] should == trainy.shape[0]"
                 return 0
         
@@ -554,9 +577,14 @@ class Smo_Csvc:
         iterations = 0        
         
         starttime = time.clock()       
-        while True:     
+        while True: 
+            start = time.clock()    
             #to select maximum violating pair.
             [i, j, obj] = self.SelectMaximumViolatingPair(trainy, K)
+            
+            if i ==280 or j== 280:
+                pass
+                
             if j == -1:
                 break
         #-------------------------------------------------------------------begin to optimize lagrange multipiers i and j------------------------------------------------------- 
@@ -616,15 +644,19 @@ class Smo_Csvc:
              
             #to calculate aplha1
             alpha1new = alpha1 + s * (alpha2 - alpha2newclipped)
+                            
             if alpha1new < 0:
                 alpha2newclipped += s * alpha1new
                 alpha1new = 0
             elif alpha1new > self.C1:
                 alpha2newclipped += s * (alpha1new - self.C1)
-                alpha1new = self.C1       
-            
-            self.alpha[i] = numpy.matrix(alpha1new)
-            self.alpha[j] =  numpy.matrix(alpha2newclipped)
+                alpha1new = self.C1    
+                   
+            if alpha1new < self.model.config.tolerance:
+                alpha1new = 0
+                
+            self.alpha[i] = alpha1new#numpy.matrix(alpha1new)
+            self.alpha[j] =  alpha2newclipped#numpy.matrix(alpha2newclipped)
             
             #to deal with Linear kernel.
             if self.model.config.kernel_type == 'Linear':
@@ -664,11 +696,15 @@ class Smo_Csvc:
                 except Exception as detail:
                     print 'error detail is:', detail
             
-            if self.model.config.isdense == True:
-                print 'alpha', i, '=',self.alpha[i].tolist()[0][0],'alpha', j,'=', self.alpha[j].tolist()[0][0], 'the objective function value =', obj
-            else:
-                print 'alpha', i, '=',self.alpha[i],'alpha', j,'=', self.alpha[j], 'the objective function value =', obj
-            
+#            if self.model.config.isdense == True:
+#                print 'alpha', i, '=',self.alpha[i].tolist()[0][0],'alpha', j,'=', self.alpha[j].tolist()[0][0], 'the objective function value =', obj
+#            else:
+#                print 'alpha', i, '=',self.alpha[i],'alpha', j,'=', self.alpha[j], 'the objective function value =', obj
+            print 'alpha', i, '=',self.alpha[i],'alpha', j,'=', self.alpha[j], 'the objective function value =', obj
+            ends = time.clock()
+#            print 'time',ends-start   
+        
+        
             iterations += 1    
             if iterations%self.model.config.times == 0:
                 #dump to log file.
@@ -677,7 +713,7 @@ class Smo_Csvc:
                 modelStr = pickle.dumps(log,1)
                 pickle.dump(modelStr, f)
                 f.close() 
-                  
+               
         #To store support vectors.
         index = []
         for i in range(0, len(self.alpha)):
@@ -799,7 +835,9 @@ class Smo_Csvc:
             if self.model.config.kernel_type == 'Linear':
                 fxi = Svm_Util.dot(self.model.config, Svm_Util.convert(self.model.config, self.model.w), testx, 0, i) + self.model.b
             else:
-                for j in range(0, self.model.svn):    
+                for j in range(0, self.model.svn):  
+                    if j == 105:
+                        pass  
                     fxi += self.model.alpha[j] * self.model.label[j] * K(j, i) 
                 fxi += self.model.b
             
