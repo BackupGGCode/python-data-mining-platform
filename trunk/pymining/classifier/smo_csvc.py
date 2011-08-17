@@ -81,7 +81,6 @@ class Svm_Util:
     def dot( sparam, trainx, trainy, i, j):
         
         '''to calculate dot product of two dense matrix or sparse matrix.'''
-        
         if trainx == None or trainy == None:
             print 'train matrix should not be empty.'
             return -1
@@ -127,7 +126,8 @@ class Svm_Util:
 #                        if  pos != -1:
 #                            sum += trainx.vals[k] * trainy.vals[pos]
 #                            curlow = pos + 1 
-                      
+                
+                
                 #to calculate dot product with O(nlgn)
                 i1 = trainx.rows[i]
                 i2 = trainy.rows[j]
@@ -148,8 +148,8 @@ class Svm_Util:
                 for k in range(i2,i2+p2):
                     key = trainy.cols[k]
                     if hash.has_key(key):
-                        sum += float(hash[key]) *float(trainy.vals[k])               
-
+                        sum += float(hash[key]) *float(trainy.vals[k])                  
+                
                 return sum
                 
             else:
@@ -177,10 +177,7 @@ class Svm_Util:
             if value == collist[low]:
                 return low        
             if value == collist[high]:
-                return high
-            
-            if low == 28217 or low == 28218 or high == 28218:
-                pass
+                return high     
             l = low
             h = high
             while(l<=h):            
@@ -221,7 +218,7 @@ class Svm_Util:
         paramlist = sparam.parameters
         eta = Svm_Util.dot(sparam, trainx, trainx,xi,xi)+Svm_Util.dot(sparam, trainy, trainy,yi,yi) - 2*Svm_Util.dot(sparam, trainx, trainy,xi,yi)
         res = 0.0
-        if eta <=0:
+        if eta <0:
             res = math.exp(sparam.tolerance*float(paramlist[0]))
         else:
             res = math.exp(-eta*float(paramlist[0]))
@@ -337,8 +334,8 @@ class Smo_Csvc:
         
         #to get C1 and C2 for negative or positive samples.
         if self.npRatio > 1:
-            self.C1 = self.model.config.C
-            self.C2 = self.model.config.C * self.npRatio
+            self.C1 = self.model.config.C / self.npRatio
+            self.C2 = self.model.config.C 
         else:
             self.C1 = self.model.config.C * self.npRatio
             self.C2 = self.model.config.C
@@ -418,8 +415,12 @@ class Smo_Csvc:
         elif self.kcache.has_key(key2):
             k = self.kcache[key2]
         else:
-            k =  WeakRefKernelData(K(i1,i))
-            self.kcache[key1] = k            
+            value = K(i1,i)
+            if value < self.model.config.tolerance:
+                value = 0
+            k =  WeakRefKernelData(value)
+            self.kcache[key1] = k  
+            
         return k.kerneldata
          
     def SelectMaximumViolatingPair(self, trainy, K):
@@ -431,7 +432,7 @@ class Smo_Csvc:
         obj_min = float("Infinity")
         
         for t in range(0, len(trainy)):
-            if (trainy[t] == 1 and abs(self.alpha[t] - self.model.config.C) > 1e-005 ) or (trainy[t] == -1 and self.alpha[t] > 0):
+            if (trainy[t] == 1 and (self.C2 - self.alpha[t]) > self.model.config.tolerance ) or (trainy[t] == -1 and self.alpha[t] > 0):
                 if -trainy[t] * self.G[t] >= G_max:
                     i = t
                     G_max =  -trainy[t] * self.G[t] 
@@ -439,7 +440,7 @@ class Smo_Csvc:
         j = -1
         G_min = float("Infinity")
         for t in range(0, len(trainy)): 
-            if (trainy[t] == -1 and abs(self.alpha[t] - self.model.config.C * self.npRatio) > 1e-005 ) or (trainy[t] == 1 and self.alpha[t] > 0)  :
+            if (trainy[t] == -1 and (self.C1 - self.alpha[t]) > self.model.config.tolerance ) or (trainy[t] == 1 and self.alpha[t] > 0)  :
                 b = G_max + trainy[t] * self.G[t]   
                      
                 if -trainy[t] * self.G[t] <= G_min:                     
@@ -457,15 +458,12 @@ class Smo_Csvc:
                     except Exception as detail:
                         print 'error detail is:', detail                   
         
-        print 'Gap = ',G_max - G_min
+        print 'Fi = ',trainy[i]*self.G[i],'Fj = ',trainy[j]*self.G[j],'Gap = ',G_max - G_min
             
         if G_max - G_min < self.model.config.eps:
             return [-1, -1, float("Infinity")]
         
-        if self.npRatio > 1:   
-            return [i, j, obj_min]  
-        else:
-            return [j, i, obj_min]  
+        return [i, j, obj_min]        
      
     def W(self,trainy, alpha1new,alpha2newclipped,i,j,K):
     
@@ -577,13 +575,9 @@ class Smo_Csvc:
         iterations = 0        
         
         starttime = time.clock()       
-        while True: 
-            start = time.clock()    
+        while True:            
             #to select maximum violating pair.
-            [i, j, obj] = self.SelectMaximumViolatingPair(trainy, K)
-            
-            if i ==280 or j== 280:
-                pass
+            [i, j, obj] = self.SelectMaximumViolatingPair(trainy, K)  
                 
             if j == -1:
                 break
@@ -606,21 +600,37 @@ class Smo_Csvc:
             #to calculate upper and lower bound.
             if y1*y2 == -1:
                 gamma = alpha2 - alpha1
-                if gamma > 0:
-                    L = gamma
-                    H = self.C2
+                if y1 == -1:
+                    if gamma > 0:
+                        L = gamma
+                        H = self.C2
+                    else:
+                        L = 0
+                        H = self.C1 + gamma   
                 else:
-                    L = 0
-                    H = self.C1 + gamma     
+                    if gamma > 0:
+                        L = gamma
+                        H = self.C1 
+                    else:
+                        L = 0
+                        H = self.C2 + gamma
 
             if y1*y2 == 1:
-                gamma = alpha2 + alpha1
-                if gamma - self.C2 > 0:
-                    L = gamma - self.C1
-                    H = self.C2
+                gamma = alpha2 + alpha1                
+                if y1 == 1:
+                    if gamma - self.C2 > 0:
+                        L = gamma - self.C2
+                        H = self.C2
+                    else:
+                        L = 0
+                        H = gamma 
                 else:
-                    L = 0
-                    H = gamma
+                    if gamma - self.C1 > 0:
+                        L = gamma - self.C1
+                        H = self.C1
+                    else:
+                        L = 0
+                        H = gamma 
             
             if -eta < 0:
                 #to calculate apha2's new value
@@ -644,16 +654,18 @@ class Smo_Csvc:
              
             #to calculate aplha1
             alpha1new = alpha1 + s * (alpha2 - alpha2newclipped)
-                            
-            if alpha1new < 0:
+                                           
+            if alpha1new < self.model.config.tolerance:
                 alpha2newclipped += s * alpha1new
                 alpha1new = 0
-            elif alpha1new > self.C1:
+            elif y1 == -1 and alpha1new > self.C1:
                 alpha2newclipped += s * (alpha1new - self.C1)
-                alpha1new = self.C1    
+                alpha1new = self.C1
+            elif y1 == 1 and alpha1new > self.C2:
+                alpha2newclipped += s * (alpha1new - self.C2)
+                alpha1new = self.C2
                    
-            if alpha1new < self.model.config.tolerance:
-                alpha1new = 0
+            
                 
             self.alpha[i] = alpha1new#numpy.matrix(alpha1new)
             self.alpha[j] =  alpha2newclipped#numpy.matrix(alpha2newclipped)
@@ -696,15 +708,9 @@ class Smo_Csvc:
                 except Exception as detail:
                     print 'error detail is:', detail
             
-#            if self.model.config.isdense == True:
-#                print 'alpha', i, '=',self.alpha[i].tolist()[0][0],'alpha', j,'=', self.alpha[j].tolist()[0][0], 'the objective function value =', obj
-#            else:
-#                print 'alpha', i, '=',self.alpha[i],'alpha', j,'=', self.alpha[j], 'the objective function value =', obj
+             
             print 'alpha', i, '=',self.alpha[i],'alpha', j,'=', self.alpha[j], 'the objective function value =', obj
-            ends = time.clock()
-#            print 'time',ends-start   
-        
-        
+           
             iterations += 1    
             if iterations%self.model.config.times == 0:
                 #dump to log file.
@@ -835,9 +841,7 @@ class Smo_Csvc:
             if self.model.config.kernel_type == 'Linear':
                 fxi = Svm_Util.dot(self.model.config, Svm_Util.convert(self.model.config, self.model.w), testx, 0, i) + self.model.b
             else:
-                for j in range(0, self.model.svn):  
-                    if j == 105:
-                        pass  
+                for j in range(0, self.model.svn):
                     fxi += self.model.alpha[j] * self.model.label[j] * K(j, i) 
                 fxi += self.model.b
             
@@ -857,7 +861,7 @@ class Smo_Csvc:
             fprlist.append(FPR)        
             
             outputlist.append([fxi,testy[i]])
-            print 'Actual output is', fxi, 'It\'s label is', testy[i]
+            print i,': Actual output is', fxi, 'It\'s label is', testy[i]
         
         #to calculate auc
         auc = 0.            
