@@ -43,5 +43,6 @@
         <name>RBF</name>
         <parameters>10</parameters>
       </kernel>
+      <cachesize>300</cachesize>
     </smo_csvc>
 </config>
