@@ -4,18 +4,18 @@ import matplotlib.pyplot as plt
 import numpy
 import os
 import pickle
-import random
-import weakref
+import psyco
+psyco.full()
+import sys
+import time
 
 from ..common.global_info import GlobalInfo
 from ..common.configuration import Configuration
 from ..math.matrix import Matrix
 from ..math.text2matrix import Text2Matrix
-from ..nlp.segmenter import Segmenter
 from numpy import *
 from operator import itemgetter
 
-import time
 
 class Svm_Param:
     '''the parameter configuration of csvc.'''
@@ -41,14 +41,15 @@ class Svm_Param:
             #-------------------end    times info-------------------------------
             
             #-------------------begin kernel info-------------------------------
-            self.kernelnode = self.curNode.GetChild("kernel");
+            self.kernelnode = self.curNode.GetChild("kernel")
             
             #to get kernel's type. 
             self.kernel_type = self.kernelnode.GetChild("name").GetValue();
             #to get parameters from top to button -> from left to right -> from inner to outer.        
             self.parameters = self.kernelnode.GetChild("parameters").GetValue().split(',')     
             #-------------------end  kernel info-------------------------------
-            
+            #to get size of cache.
+            self.cachesize = float(self.curNode.GetChild("cachesize").GetValue())
             #matrix is dense or sparse.
             self.isdense = False
         except Exception as detail:
@@ -81,6 +82,7 @@ class Svm_Util:
     def dot( sparam, trainx, trainy, i, j):
         
         '''to calculate dot product of two dense matrix or sparse matrix.'''
+        
         if trainx == None or trainy == None:
             print 'train matrix should not be empty.'
             return -1
@@ -101,34 +103,7 @@ class Svm_Util:
                     return -1
                 sum = 0.0
                 
-                #to calculate dot product with O(nlgn)
-#                i1 = trainx.rows[i]
-#                i2 = trainy.rows[j]
-#                p1 = 0  #the elements number of row i
-#                p2 = 0  #the elements number of row j
-#                if i < len(trainx.rows)-1 :
-#                    p1 = trainx.rows[i+1] - trainx.rows[i]
-#                
-#                if j < len(trainy.rows)-1 :
-#                    p2 = trainy.rows[j+1] - trainy.rows[j]                   
-#                 
-#                if p2 <= p1:     
-#                    curlow = i1      
-#                    for k in range(i2, i2+p2):  
-#                        pos = Svm_Util.binary_search(trainx.cols,curlow,i1+p1-1,trainy.cols[k])
-#                        if  pos != -1:
-#                            sum += trainy.vals[k] * trainx.vals[pos]
-#                            curlow = pos + 1
-#                else: 
-#                    curlow = i2
-#                    for k in range(i1, i1+p1):                     
-#                        pos = Svm_Util.binary_search(trainx.cols,curlow,i2+p2-1,trainx.cols[k])
-#                        if  pos != -1:
-#                            sum += trainx.vals[k] * trainy.vals[pos]
-#                            curlow = pos + 1 
-                
-                
-                #to calculate dot product with O(nlgn)
+#                to calculate dot product with O(nlgn)
                 i1 = trainx.rows[i]
                 i2 = trainy.rows[j]
                 p1 = 0  #the elements number of row i
@@ -139,17 +114,20 @@ class Svm_Util:
                 if j < len(trainy.rows)-1 :
                     p2 = trainy.rows[j+1] - trainy.rows[j]                   
                  
-                hash = {}  
-                
-                for k in range(i1, i1+p1): 
-                    key = trainx.cols[k]
-                    hash[key] = trainx.vals[k]                
-                  
-                for k in range(i2,i2+p2):
-                    key = trainy.cols[k]
-                    if hash.has_key(key):
-                        sum += float(hash[key]) *float(trainy.vals[k])                  
-                
+                if p2 <= p1:     
+                    curlow = i1      
+                    for k in range(i2, i2+p2):  
+                        pos = Svm_Util.binary_search(trainx.cols,curlow,i1+p1-1,trainy.cols[k])
+                        if  pos != -1:
+                            sum += trainy.vals[k] * trainx.vals[pos]
+                            curlow = pos + 1
+                else: 
+                    curlow = i2
+                    for k in range(i1, i1+p1):                     
+                        pos = Svm_Util.binary_search(trainx.cols,curlow,i2+p2-1,trainx.cols[k])
+                        if  pos != -1:
+                            sum += trainx.vals[k] * trainy.vals[pos]
+                            curlow = pos + 1 
                 return sum
                 
             else:
@@ -233,7 +211,7 @@ class Svm_Util:
         kernel_type = sparam.kernel_type
         
         if kernel_type == 'RBF':           
-            return lambda xi,yi: Svm_Util.RBF(sparam,trainx, trainy,xi,yi)#math.exp(sparam.tolerance*float(paramlist[0])) if (Svm_Util.dot(sparam, trainx, trainx,xi,xi)+Svm_Util.dot(sparam, trainy, trainy,yi,yi) - 2*Svm_Util.dot(sparam, trainx, trainy,xi,yi)) <= 0  else math.exp(-(Svm_Util.dot(sparam, trainx, trainx,xi,xi)+Svm_Util.dot(sparam, trainy, trainy,yi,yi) - 2*Svm_Util.dot(sparam, trainx, trainy,xi,yi))*float(paramlist[0]))
+            return lambda xi,yi: Svm_Util.RBF(sparam,trainx, trainy,xi,yi)
         elif kernel_type == 'Linear':
             return lambda xi,yi:Svm_Util.dot(sparam, trainx, trainy,xi,yi) + float(paramlist[0])
         elif kernel_type == 'Polynomial':
@@ -277,7 +255,8 @@ class Svm_Util:
         else:
             ax.scatter(xOffsets, yOffsets, c=colors, alpha=0.75) 
         plt.show()
-        plt.savefig('mining/scatter.png')
+        file_name = 'mining/scatter_' + time.ctime() + '.png'
+        plt.savefig(file_name)
         
     @staticmethod
     def draw_plot(xOffsets, yOffsets, xl = 'X', yl = 'Y', title = 'figure'):  
@@ -295,13 +274,8 @@ class Svm_Util:
         ax.plot(xOffsets, yOffsets, lw=3, color='purple')
         plt.title(title)        
         plt.show()
-        plt.savefig('mining/plot.png')
- 
-class WeakRefKernelData():
-    '''to wrap weak references data'''
-    
-    def __init__(self,float):    
-        self.kerneldata = float
+        file_name = 'mining/plot_' + time.ctime() + '.png'
+        plt.savefig(file_name)
                
 class Smo_Csvc:
     '''a support vector machine classifier using 'C' to balance empirical risk and structural risk.'''
@@ -314,8 +288,8 @@ class Smo_Csvc:
             loadFromFile: Whether to read the csvc model from disk.
             recoverFromLog: Whether to recover the training procedure from disk.
             npRatio: negative samples / positive samples.
-         '''
-        
+         '''        
+
         self.istrained = False
         #alpha
         self.alpha = []
@@ -326,7 +300,7 @@ class Smo_Csvc:
         #bias
         self.b = 0.0
         #caching kii
-        self.kcache = weakref.WeakValueDictionary()        
+        self.kcache = {}      
         #initialize svm model.
         self.model = Svm_Model(config, nodeName)  
         #negative samples number divide positive samples.
@@ -406,22 +380,38 @@ class Smo_Csvc:
             
     def GetValueFromKernelCache(self, i, i1, K, trainy):   
              
-        '''To get kernel value from kernel cache.'''
-        
+        '''To get kernel value from kernel cache.'''        
+                         
         key1 = '%s%s%s'%(str(i1), '-', str(i))
-        key2 = '%s%s%s'%(str(i), '-', str(i1))
+        key2 = '%s%s%s'%(str(i),  '-', str(i1))
+
         if self.kcache.has_key(key1):
             k = self.kcache[key1]
         elif self.kcache.has_key(key2):
             k = self.kcache[key2]
         else:
-            value = K(i1,i)
-            if value < self.model.config.tolerance:
-                value = 0
-            k =  WeakRefKernelData(value)
+            k = K(i1,i)
+            if k < self.model.config.tolerance:
+                k = 0             
             self.kcache[key1] = k  
             
-        return k.kerneldata
+        return k
+    
+    def ReduceCache(self):
+        'To free memory & to prevent memory leaks.'
+        
+        try:
+            newcache = {}
+            if sys.getsizeof(self.kcache) > self.model.config.cachesize * (1024 **2):
+                for key in self.kcache.iterkeys():
+                    kl = key.split('-')
+                    if kl[0] == kl[1]:
+                          newcache[key] = self.kcache[key]
+                self.kcache = 0
+                self.kcache = newcache 
+                print 'To free memory success.'
+        except Exception as detail:
+            print 'To free memory error,detail:', detail
          
     def SelectMaximumViolatingPair(self, trainy, K):
         
@@ -458,7 +448,7 @@ class Smo_Csvc:
                     except Exception as detail:
                         print 'error detail is:', detail                   
         
-        print 'Fi = ',trainy[i]*self.G[i],'Fj = ',trainy[j]*self.G[j],'Gap = ',G_max - G_min
+        print 'Gap = ',G_max - G_min,'Fi=',trainy[i] * self.G[i],'Fj=',trainy[j] * self.G[j]  
             
         if G_max - G_min < self.model.config.eps:
             return [-1, -1, float("Infinity")]
@@ -574,10 +564,11 @@ class Smo_Csvc:
         #the iterations.
         iterations = 0        
         
-        starttime = time.clock()       
-        while True:            
+        starttime = time.time()       
+        while True:   
+            begin = time.time()
             #to select maximum violating pair.
-            [i, j, obj] = self.SelectMaximumViolatingPair(trainy, K)  
+            [i, j, obj] = self.SelectMaximumViolatingPair(trainy, K) 
                 
             if j == -1:
                 break
@@ -667,8 +658,8 @@ class Smo_Csvc:
                    
             
                 
-            self.alpha[i] = alpha1new#numpy.matrix(alpha1new)
-            self.alpha[j] =  alpha2newclipped#numpy.matrix(alpha2newclipped)
+            self.alpha[i] = alpha1new
+            self.alpha[j] =  alpha2newclipped
             
             #to deal with Linear kernel.
             if self.model.config.kernel_type == 'Linear':
@@ -711,6 +702,7 @@ class Smo_Csvc:
              
             print 'alpha', i, '=',self.alpha[i],'alpha', j,'=', self.alpha[j], 'the objective function value =', obj
            
+            print time.time() - begin        
             iterations += 1    
             if iterations%self.model.config.times == 0:
                 #dump to log file.
@@ -719,6 +711,7 @@ class Smo_Csvc:
                 modelStr = pickle.dumps(log,1)
                 pickle.dump(modelStr, f)
                 f.close() 
+                self.ReduceCache()
                
         #To store support vectors.
         index = []
@@ -786,10 +779,8 @@ class Smo_Csvc:
             os.remove(self.model.config.logpath)
         except:
             pass           
-                
-        endtime = time.clock()
-                
-        return [endtime-starttime,iterations]  
+                               
+        return [time.time()-starttime,iterations]  
         
     def Test(self,testx,testy):
         
