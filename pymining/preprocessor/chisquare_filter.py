@@ -1,5 +1,3 @@
-import pickle
-
 from ..math.matrix import Matrix
 from ..math.text2matrix import Text2Matrix
 from ..nlp.segmenter import Segmenter
@@ -13,13 +11,12 @@ class ChiSquareFilter:
         self.method = self.curNode.GetChild("method").GetValue()
         self.logPath = self.curNode.GetChild("log_path").GetValue()
         self.modelPath = self.curNode.GetChild("model_path").GetValue()
-        self.idMap = None
+        self.blackList = {}
         self.trained = loadFromFile
         if (loadFromFile):
             f = open(self.modelPath, "r")
-            modelStr = pickle.load(f)
-            [self.idMap] = pickle.loads(modelStr)
-            f.close()
+            for line in f:
+                self.blackList[int(line)] = 1
 
     def SampleFilter(self, cols, vals):
         if (not self.trained):
@@ -35,12 +32,11 @@ class ChiSquareFilter:
         newCols = []
         newVals = []
         for c in range(0, len(cols)):
-            if self.idMap[cols[c]] >= 0:
-                newCols.append(self.idMap[cols[c]])
+            if not self.blackList.has_key(cols[c]):
+                newCols.append(cols[c])
                 newVals.append(vals[c])
 
         return [cols, vals]
-
     """
     filter given x,y by blackList
     x's row should == y's row
@@ -68,10 +64,13 @@ class ChiSquareFilter:
             #print "===new doc==="
 
             for c in range(x.rows[r], x.rows[r + 1]):
-                if self.idMap[x.cols[c]] >= 0 :
-                    newCols.append(self.idMap[x.cols[c]])
+                if not self.blackList.has_key(x.cols[c]):
+                    newCols.append(x.cols[c])
                     newVals.append(x.vals[c])
                     curRowLen += 1
+
+                    #debug
+                    #print GlobalInfo.idToTerm[x.cols[c]].encode("utf-8")
 
             newRows.append(newRows[len(newRows) - 1] + curRowLen)
         return [Matrix(newRows, newCols, newVals), y]
@@ -166,25 +165,15 @@ class ChiSquareFilter:
         #sort for chi-score, and make blackList
         chiScore = sorted(chiScore, key = lambda chiType:chiType[0], reverse = True)
 
-        #init idmap
-        self.idMap = [0 for i in range(x.nCol)]
-
-        #add un-selected feature-id to idmap
+        #add un-selected feature-id to blackList
         for i in range(int(self.rate * len(chiScore)), len(chiScore)):
-            self.idMap[chiScore[i][1]] = -1
-        offset = 0
-        for i in range(x.nCol):
-            if (self.idMap[i] < 0):
-                offset += 1
-            else:
-                self.idMap[i] = i - offset
-                GlobalInfo.newIdToId[i - offset] = i
+            self.blackList[chiScore[i][1]] = 1
 
         #output model information
         if (self.modelPath <> ""):
             f = open(self.modelPath, "w")
-            modelStr = pickle.dumps([self.idMap], 1)
-            pickle.dump(modelStr, f)
+            for k in self.blackList:
+                f.write(str(k) + "\n")
             f.close()
 
         #output chiSquare info
