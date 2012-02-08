@@ -1,7 +1,7 @@
 #coding=utf8=
 #mmseg
 
-from ..common.configuration import Configuration
+from configuration import Configuration
 
 class Segmenter:
     def __init__(self, config, nodeName):
@@ -39,8 +39,8 @@ class Segmenter:
         f.close()
         return dicts
 
-"""
 if __name__ == "__main__":
+    
     cfg = Configuration.FromFile("conf/test.xml")
     segmenter = Segmenter(cfg, "segmenter")
     f = open("data/tuangou_titles3.txt")
@@ -48,4 +48,3 @@ if __name__ == "__main__":
         wordList = segmenter.Split(line.decode("utf-8"))
         for word in wordList:
             print word.encode("utf-8")
-"""

@@ -33,7 +33,6 @@ class Configuration:
     def FromFile(path):
         return Configuration(minidom.parse(path).childNodes[0])
 
-"""
 if __name__ == "__main__":
     cfg = Configuration.FromFile("sandbox/test.xml")
     print cfg.GetName()
@@ -45,4 +44,3 @@ if __name__ == "__main__":
     for c in cfgs:
         print c.GetName()
         print c.GetValue()
-"""

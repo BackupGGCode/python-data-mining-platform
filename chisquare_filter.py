@@ -1,10 +1,8 @@
-import pickle
-
-from ..math.matrix import Matrix
-from ..math.text2matrix import Text2Matrix
-from ..nlp.segmenter import Segmenter
-from ..common.global_info import GlobalInfo
-from ..common.configuration import Configuration
+from matrix import Matrix
+from classifier_matrix import ClassifierMatrix
+from segmenter import Segmenter
+from py_mining import PyMining
+from configuration import Configuration
 
 class ChiSquareFilter:
     def __init__(self, config, nodeName, loadFromFile = False):
@@ -13,40 +11,19 @@ class ChiSquareFilter:
         self.method = self.curNode.GetChild("method").GetValue()
         self.logPath = self.curNode.GetChild("log_path").GetValue()
         self.modelPath = self.curNode.GetChild("model_path").GetValue()
-        self.idMap = None
+        self.blackList = {}
         self.trained = loadFromFile
         if (loadFromFile):
             f = open(self.modelPath, "r")
-            modelStr = pickle.load(f)
-            [self.idMap] = pickle.loads(modelStr)
-            f.close()
-
-    def SampleFilter(self, cols, vals):
-        if (not self.trained):
-            print "train filter before test"
-            return False
-
-        #check parameter
-        if (len(cols) <> len(vals)):
-            print "length of cols should equals length of vals"
-            return False
-
-        #filter sample
-        newCols = []
-        newVals = []
-        for c in range(0, len(cols)):
-            if self.idMap[cols[c]] >= 0:
-                newCols.append(self.idMap[cols[c]])
-                newVals.append(vals[c])
-
-        return [cols, vals]
+            for line in f:
+                self.blackList[int(line)] = 1
 
     """
     filter given x,y by blackList
     x's row should == y's row
     @return newx, newy filtered
     """
-    def MatrixFilter(self, x, y):
+    def TestFilter(self, x, y):
         if (not self.trained):
             print "train filter before test"
             return False
@@ -68,10 +45,13 @@ class ChiSquareFilter:
             #print "===new doc==="
 
             for c in range(x.rows[r], x.rows[r + 1]):
-                if self.idMap[x.cols[c]] >= 0 :
-                    newCols.append(self.idMap[x.cols[c]])
+                if not self.blackList.has_key(x.cols[c]):
+                    newCols.append(x.cols[c])
                     newVals.append(x.vals[c])
                     curRowLen += 1
+
+                    #debug
+                    #print PyMining.idToTerm[x.cols[c]].encode("utf-8")
 
             newRows.append(newRows[len(newRows) - 1] + curRowLen)
         return [Matrix(newRows, newCols, newVals), y]
@@ -116,8 +96,8 @@ class ChiSquareFilter:
 
         #create a table stores X^2(t, c)
         #create a table stores A(belong to c, and include t
-        chiTable = [[0 for i in range(x.nCol)] for j in range(yy[len(yy) - 1] + 1)]
-        aTable = [[0 for i in range(x.nCol)] for j in range(yy[len(yy) - 1] + 1)]
+        chiTable = [[0 for i in range(x.nCol)] for j in range(len(yy))]
+        aTable = [[0 for i in range(x.nCol)] for j in range(len(yy))]
 
         #calculate a-table
         for row in range(x.nRow):
@@ -129,62 +109,52 @@ class ChiSquareFilter:
         for t in range(x.nCol):
             for cc in range(len(yy)):
                 #get a
-                a = aTable[yy[cc]][t]
+                a = aTable[cc][t]
                 #get b
-                b = GlobalInfo.idToDocCount[t] - a
+                b = PyMining.idToDocCount[t] - a
                 #get c
-                c = GlobalInfo.classToDocCount[yy[cc]] - a
+                c = PyMining.classToDocCount[cc] - a
                 #get d
                 d = n - a - b -c
                 #get X^2(t, c)
                 numberator = float(n) * (a*d - c*b) * (a*d - c*b)
                 denominator = float(a+c) * (b+d) * (a+b) * (c+d)
-                chiTable[yy[cc]][t] = numberator / denominator
+                chiTable[cc][t] = numberator / denominator
 
         #calculate chi-score of each t
         #chiScore is [score, t's id] ...(n)
         chiScore = [[0 for i in range(2)] for j in range(x.nCol)]
         if (self.method == "avg"):
             #calculate prior prob of each c
-            priorC = [0 for i in range(yy[len(yy) - 1] + 1)]
+            priorC = [0 for i in range(len(yy))]
             for i in range(len(yy)):
-                priorC[yy[i]] = float(GlobalInfo.classToDocCount[yy[i]]) / n
+                priorC[i] = float(PyMining.classToDocCount[i]) / n
 
             #calculate score of each t
             for t in range(x.nCol):
                 chiScore[t][1] = t
                 for c in range(len(yy)):
-                    chiScore[t][0] += priorC[yy[c]] * chiTable[yy[c]][t]
+                    chiScore[t][0] += priorC[c] * chiTable[c][t]
         else:
             #calculate score of each t
             for t in range(x.nCol):
                 chiScore[t][1] = t
                 for c in range(len(yy)):
-                    if (chiScore[t][0] < chiTable[yy[c]][t]):
-                        chiScore[t][0] = chiTable[yy[c]][t]
+                    if (chiScore[t][0] < chiTable[c][t]):
+                        chiScore[t][0] = chiTable[c][t]
 
         #sort for chi-score, and make blackList
         chiScore = sorted(chiScore, key = lambda chiType:chiType[0], reverse = True)
 
-        #init idmap
-        self.idMap = [0 for i in range(x.nCol)]
-
-        #add un-selected feature-id to idmap
+        #add un-selected feature-id to blackList
         for i in range(int(self.rate * len(chiScore)), len(chiScore)):
-            self.idMap[chiScore[i][1]] = -1
-        offset = 0
-        for i in range(x.nCol):
-            if (self.idMap[i] < 0):
-                offset += 1
-            else:
-                self.idMap[i] = i - offset
-                GlobalInfo.newIdToId[i - offset] = i
+            self.blackList[chiScore[i][1]] = 1
 
         #output model information
         if (self.modelPath <> ""):
             f = open(self.modelPath, "w")
-            modelStr = pickle.dumps([self.idMap], 1)
-            pickle.dump(modelStr, f)
+            for k in self.blackList:
+                f.write(str(k) + "\n")
             f.close()
 
         #output chiSquare info
@@ -195,7 +165,7 @@ class ChiSquareFilter:
             for i in range(len(chiScore)):
                 if (i == int(self.rate * len(chiScore))):
                     f.write("========unselected=======\n")
-                term = GlobalInfo.idToTerm[chiScore[i][1]]
+                term = PyMining.idToTerm[chiScore[i][1]]
                 score = chiScore[i][0]
                 f.write(term.encode("utf-8") + " " + str(score) + "\n")
             f.close()
@@ -204,12 +174,10 @@ class ChiSquareFilter:
 
         return True
 
-"""
 if __name__ == "__main__":
     config = Configuration.FromFile("conf/test.xml")
-    GlobalInfo.Init(config, "__global__")
-    txt2mat = Text2Matrix(config, "__matrix__")
-    [trainx, trainy] = txt2mat.CreateTrainMatrix("data/tuangou_titles3.txt")
+    PyMining.Init(config, "__global__")
+    matCreater = ClassifierMatrix(config, "__matrix__")
+    [trainx, trainy] = matCreater.CreateTrainMatrix("data/tuangou_titles3.txt")
     chiFilter = ChiSquareFilter(config, "__filter__")
     chiFilter.TrainFilter(trainx, trainy) 
-"""

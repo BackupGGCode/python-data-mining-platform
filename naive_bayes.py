@@ -1,11 +1,11 @@
 import math
 import pickle
 
-from ..math.matrix import Matrix
-from ..math.text2matrix import Text2Matrix
-from ..nlp.segmenter import Segmenter
-from ..common.global_info import GlobalInfo
-from ..common.configuration import Configuration 
+from matrix import Matrix
+from classifier_matrix import ClassifierMatrix
+from segmenter import Segmenter
+from py_mining import PyMining
+from configuration import Configuration 
 
 class NaiveBayes:
     def __init__(self, config, nodeName, loadFromFile = False):
@@ -37,7 +37,7 @@ class NaiveBayes:
         yy = set(y)
         yy = list(yy)
         yy.sort()
-        self.cPrior = [0 for i in range(yy[len(yy) - 1] + 1)]
+        self.cPrior = [0 for i in range(len(yy))]
 
         #2. fill cPrior
         for i in y:
@@ -56,8 +56,7 @@ class NaiveBayes:
         #normalize vTable
         for i in range(x.nCol):
             for j in range(len(self.cPrior)):
-                if (self.cPrior[j] > 1e-10):
-                    self.vTable[i][j] /= float(self.cPrior[j])
+                self.vTable[i][j] /= float(self.cPrior[j])
         
         #normalize cPrior
         for i in range(len(self.cPrior)):
@@ -72,48 +71,6 @@ class NaiveBayes:
         f.close()
 
         return True
-
-    def TestSample(self, cols, vals):
-        #check parameter
-        if (not self.trained):
-            print "Error!, not trained!"
-            return False
-        if (len(cols) <> len(vals)):
-            print "Error! len of cols should == len of vals"
-            return False
-
-        #calculate best p
-        targetP = []
-        maxP = -1000000000
-        for target in range(len(self.cPrior)):
-            curP = 0
-            curP += math.log(self.cPrior[target])
-            
-            for c in range(0, len(cols)):
-                if (self.vTable[cols[c]][target] == 0):
-                    curP += math.log(1e-7)
-                else:
-                    curP += math.log(self.vTable[cols[c]][target])
-                #debug
-                #if (self.logPath <> ""):
-                #    term = GlobalInfo.idToTerm[cols[c]]
-                #    prob = math.log(self.vTable[cols[c]][target] + 1e-7) 
-                #    f.write(term.encode("utf-8") + ":" + str(cols[c]) + ":" + str(prob) + "\n")
-            
-            targetP.append(curP)
-            if (curP > maxP):
-                bestY = target
-                maxP = curP
-
-        #normalize probable
-        ret = []
-        total = 0
-        for i in range(len(targetP)):
-            total += math.exp(targetP[i])
-        for i in range(len(targetP)):
-            ret.append((i, math.exp(targetP[i]) / total))
-
-        return tuple(ret)
 
     def Test(self, x, y):
         #check parameter
@@ -143,14 +100,11 @@ class NaiveBayes:
             #calculate best p
             for target in range(len(self.cPrior)):
                 curP = 0
-                if (self.cPrior[target] > 1e-8):
-                    curP += math.log(self.cPrior[target])
-                else:
-                    curP += math.log(1e-8)
+                curP += math.log(self.cPrior[target])
                 
                 #debug
-                #if (self.logPath <> ""):
-                #    f.write("<target> : " + str(target) + "\n")
+                if (self.logPath <> ""):
+                    f.write("<target> : " + str(target) + "\n")
 
                 for c in range(x.rows[r], x.rows[r + 1]):
                     if (self.vTable[x.cols[c]][target] == 0):
@@ -159,18 +113,18 @@ class NaiveBayes:
                         curP += math.log(self.vTable[x.cols[c]][target])
 
                     #debug
-                    #if (self.logPath <> ""):
-                    #    term = GlobalInfo.idToTerm[x.cols[c]]
-                    #    prob = math.log(self.vTable[x.cols[c]][target] + 1e-7) 
-                    #    f.write(term.encode("utf-8") + ":" + str(x.cols[c]) + ":" + str(prob) + "\n")
+                    if (self.logPath <> ""):
+                        term = PyMining.idToTerm[x.cols[c]]
+                        prob = math.log(self.vTable[x.cols[c]][target] + 1e-7) 
+                        f.write(term.encode("utf-8") + ":" + str(x.cols[c]) + ":" + str(prob) + "\n")
 
                 if (curP > maxP):
                     bestY = target
                     maxP = curP
 
                 #debug
-                #if (self.logPath <> ""):
-                #    f.write("curP:" + str(curP) + "\n")
+                if (self.logPath <> ""):
+                    f.write("curP:" + str(curP) + "\n")
 
             if (bestY < 0):
                 print "best y < 0, error!"
@@ -187,3 +141,24 @@ class NaiveBayes:
             f.close()
         
         return [retY, float(correct) / len(retY)]
+
+if __name__ == "__main__":
+    config = Configuration.FromFile("conf/test.xml")
+    PyMining.Init(config, "__global__")
+    matCreater = ClassifierMatrix(config, "__matrix__")
+    [trainx, trainy] = matCreater.CreateTrainMatrix("data/train.txt")
+
+    nbModel = NaiveBayes(config, "naive_bayes")
+    nbModel.Train(trainx, trainy)
+
+    [testx, testy] = matCreater.CreatePredictMatrix("data/test.txt")
+    [resultY, precision] = nbModel.Test(testx, testy)
+    
+    """
+    print "testX, rows, cols ,vals"
+    print testX.rows
+    print testY
+    print testX.cols
+    """
+
+    print precision
